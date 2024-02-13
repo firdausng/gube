@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body{
+    @apply bg-app-light dark:bg-app-dark text-app-dark dark:text-app-light text-sm
+}
+
+.app-text-light-dark{
+    @apply text-app-dark dark:text-app-light
+}
+
+.app-text-lightest-darkest{
+    @apply text-app-darkest dark:text-app-lightest
+}
+
+.app-bg-light-dark{
+    @apply bg-app-light dark:bg-app-dark
+}
+
+.app-bg-lightest-darkest{
+    @apply bg-app-lightest dark:bg-app-darkest
+}
+
+.splitpanes__pane{
+    @apply bg-app-lightest dark:bg-app-darkest overflow-auto !important
+}
+.splitpanes__splitter {
+    @apply bg-app-light dark:bg-app-dark !important
+}
+
+.xterm, .splitpanes__pane > [role="tabpanel"] > div {
+    height: 100%;
+    width: 100%;
+}
