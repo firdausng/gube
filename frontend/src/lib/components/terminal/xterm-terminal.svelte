@@ -11,7 +11,7 @@
 	import { SearchBarAddon } from 'xterm-addon-search-bar';
 	import { onMount } from 'svelte';
 	import { AdventureTime, Atom, AlienBlood, Afterglow, Batman, Blazer } from 'xterm-theme';
-	import { RunCommand } from '$lib/wailsjs/go/main/App';
+	import { RunCommand } from '$lib/wailsjs/go/backend/App';
 
 	let terminalElement: HTMLElement;
 	let termFit;

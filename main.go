@@ -2,28 +2,31 @@ package main
 
 import (
 	"embed"
+	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
-
-	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"gube/backend"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
+
+	go startServer()
+
 	// Create an instance of the app structure
-	app := NewApp()
+	app := backend.NewApp()
 
 	AppMenu := menu.NewMenu()
 	FileMenu := AppMenu.AddSubmenu("File")
 	//FileMenu.AddText("&Open", keys.CmdOrCtrl("o"), openFile)
 	FileMenu.AddSeparator()
 	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-		runtime.Quit(app.ctx)
+		runtime.Quit(app.Ctx)
 	})
 
 	SettingMenu := AppMenu.AddSubmenu("Settings")
@@ -41,7 +44,7 @@ func main() {
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 255},
-		OnStartup:        app.startup,
+		OnStartup:        app.Startup,
 		Bind: []interface{}{
 			app,
 		},
@@ -52,6 +55,20 @@ func main() {
 	}
 }
 
-func changeTheme(a *App, data *menu.CallbackData) {
-	runtime.EventsEmit(a.ctx, "change-theme")
+func changeTheme(a *backend.App, data *menu.CallbackData) {
+	runtime.EventsEmit(a.Ctx, "change-theme")
+}
+
+func startServer() {
+	//server := gin.Default()
+	//server.Use(cors.Default())
+	//
+	//server.GET("/", func(context *gin.Context) {
+	//	context.JSON(http.StatusCreated, gin.H{
+	//		"message": "hi there",
+	//	})
+	//})
+	////routes.Routes(*app)
+	//
+	//server.Run(":3001")
 }
