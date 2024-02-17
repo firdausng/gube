@@ -7,7 +7,6 @@
 		getCoreRowModel, type Row, type Table,
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
-	import {onMount} from "svelte";
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 
 	type Pod = {
