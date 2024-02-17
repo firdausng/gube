@@ -1,9 +1,8 @@
 <script>
 	import "../app.css";
 	import ThemeToggle from "$lib/components/theme.svelte";
-
     import { appDataStore } from '$lib/store/app-data-store';
-    import {GetActiveWorkspace} from "$lib/wailsjs/go/backend/App.js";
+    import {GetActiveWorkspace} from "$lib/wailsjs/go/backend/App";
     import {goto} from "$app/navigation";
     import {onMount} from "svelte";
 
@@ -14,6 +13,7 @@
                 activeWorkspace: {
                     id: activeWorkspace.data.ID,
                     name: activeWorkspace.data.name,
+                    activeResource: null,
                     contexts: []
                 }
             }

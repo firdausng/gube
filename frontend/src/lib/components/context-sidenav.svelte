@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type {NavigationItem} from "$lib/types";
-	import 'iconify-icon'
+	import 'iconify-icon';
+
 	let navigationList: NavigationItem[] = [
 		{
 			folder: 'Workloads',
@@ -62,7 +63,7 @@
 <div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-light dark:bg-app-dark pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
 	{#each folderSettings as folder (folder.name)}
 		<div>
-			<button class="flex gap-1" onclick={()=>toggleOpenFolder(folder.name)}>
+			<button class="flex gap-1" on:click={()=>toggleOpenFolder(folder.name)}>
 				<iconify-icon icon={folder.icon} class="px-1 text-xl cursor-pointer text-app-dark dark:text-app-lightest text-center w-full"></iconify-icon>
 				<span class="break-words">{folder.name}</span>
 			</button>

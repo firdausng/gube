@@ -1,253 +1,135 @@
 <script lang="ts">
-	import { writable } from 'svelte/store'
+	import {GetPodList} from "$lib/wailsjs/go/backend/App"
+	import {type Readable, writable} from 'svelte/store'
 	import {
 		createSvelteTable,
 		flexRender,
-		getCoreRowModel,
+		getCoreRowModel, type Row, type Table,
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
-	import { page } from '$app/stores';
-	import type {Page} from "@sveltejs/kit";
+	import {onMount} from "svelte";
+	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 
-	type Person = {
-		firstName: string
-		lastName: string
-		age: number
-		visits: number
-		status: string
-		progress: number
+	type Pod = {
+		name: string
+		namespace: string
+		phase: string
 	}
 
-	let pageData: Page<Record<string, string>>;
-	page.subscribe(p =>{
-		console.log(p)
-		pageData = p;
+	let appData: AppData;
+	appDataStore.subscribe(data =>{
+		appData = data;
 	})
 
-	const defaultData: Person[] = [
+	const defaultColumns: ColumnDef<Pod>[] = [
 		{
-			firstName: 'tanner',
-			lastName: 'linsley',
-			age: 24,
-			visits: 100,
-			status: 'In Relationship',
-			progress: 50,
-		},
-		{
-			firstName: 'tandy',
-			lastName: 'miller',
-			age: 40,
-			visits: 40,
-			status: 'Single',
-			progress: 80,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-		{
-			firstName: 'joe',
-			lastName: 'dirte',
-			age: 45,
-			visits: 20,
-			status: 'Complicated',
-			progress: 10,
-		},
-	]
-
-	const defaultColumns: ColumnDef<Person>[] = [
-		{
-			accessorKey: 'firstName',
+			accessorKey: 'name',
+			header: () => 'Name',
 			cell: info => info.getValue(),
 			footer: info => info.column.id,
 		},
 		{
-			accessorFn: row => row.lastName,
-			id: 'lastName',
+			accessorKey: 'namespace',
+			header: () => 'Namespace',
 			cell: info => info.getValue(),
-			header: () => 'Last Name',
 			footer: info => info.column.id,
 		},
 		{
-			accessorKey: 'age',
-			header: () => 'Age',
-			footer: info => info.column.id,
-		},
-		{
-			accessorKey: 'visits',
-			header: () => 'Visits',
-			footer: info => info.column.id,
-		},
-		{
-			accessorKey: 'status',
-			header: 'Status',
-			footer: info => info.column.id,
-		},
-		{
-			accessorKey: 'progress',
-			header: 'Profile Progress',
+			accessorKey: 'phase',
+			header: () => 'Phase',
+			cell: info => info.getValue(),
 			footer: info => info.column.id,
 		},
 	]
 
-	const options = writable<TableOptions<Person>>({
-		data: defaultData,
-		columns: defaultColumns,
-		getCoreRowModel: getCoreRowModel(),
-	})
+	let table:Readable<Table<Pod>>
 
-	const table = createSvelteTable(options)
+	let podListPromise = getPodList()
+	async function getPodList(){
+		if(appData){
+			const list = await GetPodList(appData.activeWorkspace.activeContext.name,"")
+			console.log(list)
+			let podList = list.data.map((l:any) => {
+				const pod: Pod = {
+					name: l.metadata.name,
+					namespace: l.metadata.namespace,
+					phase: l.status.phase,
+				}
+				return pod
+			})
+			console.log(podList)
+
+			const options = writable<TableOptions<Pod>>({
+				data: podList,
+				columns: defaultColumns,
+				getCoreRowModel: getCoreRowModel(),
+			})
+
+			table = createSvelteTable(options)
+		}
+
+	}
+
+	function handlePodClicked(row: Row<Pod>) {
+		console.log(row.original)
+	}
+
+
+
 </script>
 
-<div class="flex flex-col w-full">
-	<table class="table-auto w-full border-collapse ">
-		<thead>
-		{#each $table.getHeaderGroups() as headerGroup}
-			<tr>
-				{#each headerGroup.headers as header}
-					<th>
-						{#if !header.isPlaceholder}
-							<svelte:component
-								this={flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-							/>
-						{/if}
-					</th>
-				{/each}
-			</tr>
-		{/each}
-		</thead>
-		<tbody>
-		{#each $table.getRowModel().rows as row}
-			<tr class="even:bg-app-light/50 odd:bg-app-lightest dark:even:bg-app-dark/50 dark:odd:bg-app-darkest">
-				{#each row.getVisibleCells() as cell}
-					<td>
-						<svelte:component
-							this={flexRender(cell.column.columnDef.cell, cell.getContext())}
-						/>
-					</td>
-				{/each}
-			</tr>
-		{/each}
-		</tbody>
-	</table>
-	<div class="h-4" />
-</div>
+{#await podListPromise}
+	<p>...waiting</p>
+{:then data}
+	<div class="flex flex-col w-full">
+		<div class="flex flex-col">
+			<div class="">
+				<div class="inline-block min-w-full">
+					<div class="inline-block min-w-full">
+						<table class="min-w-full text-left text-sm">
+							<thead class="border-b font-medium">
+							{#each $table.getHeaderGroups() as headerGroup}
+								<tr>
+									{#each headerGroup.headers as header}
+										<th class="px-2 py-2">
+											{#if !header.isPlaceholder}
+												<svelte:component
+														this={flexRender(
+															header.column.columnDef.header,
+															header.getContext()
+                  										)}
+												/>
+											{/if}
+										</th>
+									{/each}
+								</tr>
+							{/each}
+							</thead>
+							<tbody>
+							{#each $table.getRowModel().rows as row}
+								<tr on:click={()=> handlePodClicked(row)} class="text-app-dark/80 dark:text-app-light/80
+								even:bg-app-light odd:bg-app-lightest dark:even:bg-app-dark dark:odd:bg-app-darkest
+								hover:text-app-darkest dark:hover:text-app-lightest
+								cursor-pointer">
+									{#each row.getVisibleCells() as cell}
+										<td class="whitespace-nowrap px-2 py-2 font-sm">
+											<svelte:component
+													this={flexRender(cell.column.columnDef.cell, cell.getContext())}
+											/>
+										</td>
+									{/each}
+								</tr>
+							{/each}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="h-4" />
+	</div>
+{:catch error}
+	<p style="color: red">{error.message}</p>
+{/await}
+

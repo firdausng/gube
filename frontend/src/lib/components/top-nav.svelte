@@ -5,10 +5,7 @@
 	import { appSettingStore } from '$lib/store/app-setting-store';
 	import { appDataStore, type Workspace } from '$lib/store/app-data-store';
 
-	// let contexts = [
-	// 	{id: 1, name:"SMD", active:true},
-	// 	{id: 2, name:"TBD", active:false},
-	// ]
+
 	let workspace: Workspace;
 	appDataStore.subscribe(data => {
 		if(data.activeWorkspace){
@@ -50,7 +47,13 @@
 					<button class="text-sm px-1" on:click={()=>setActiveContext(context.id)}>{context.name}</button>
 				</section>
 			{/each}
+
+			<section class="dark:border-app-lightest p-1 flex items-center">
+				<p class="uppercase">{workspace.activeResource ? workspace.activeResource.name : ''}</p>
+			</section>
+
 		{/if}
+
 
 	</div>
 

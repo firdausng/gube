@@ -1,6 +1,9 @@
 import type {Writable} from "svelte/store";
 import {localStore} from "$lib/store/storage-store";
-import type {AppSetting} from "$lib/store/app-setting-store";
+
+export type Resource = {
+    name: string
+}
 
 export type WorkspaceContext = {
     name: string
@@ -12,12 +15,13 @@ export type Workspace = {
     name: string
     id: string
     contexts: WorkspaceContext[]
+    activeContext: WorkspaceContext
+    activeResource: Resource
 }
 
 export type AppData = {
-    activeWorkspace: Workspace | null
+    activeWorkspace: Workspace
 }
 
-export const appDataStore:Writable<AppData> = localStore<AppData>('app-data', {
-    activeWorkspace: null,
-});
+
+export const appDataStore:Writable<AppData> = localStore<AppData>('app-data', null!);

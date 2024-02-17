@@ -8,20 +8,16 @@
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import type {Page} from "@sveltejs/kit";
+	import {type AppData, appDataStore, type WorkspaceContext} from '$lib/store/app-data-store';
 
 	type K8sContext = {
 		cluster: string
 		user: string
 	}
 
-	let pageData: Page<Record<string, string>>;
-	page.subscribe(p =>{
-		const searchParams = new URLSearchParams(p.url.searchParams)
-		console.log(p.url)
-		console.log(searchParams)
-		pageData = p;
+	let appData: AppData;
+	appDataStore.subscribe(p =>{
+		appData = p;
 	})
 
 	const defaultColumns: ColumnDef<K8sContext>[] = [
@@ -59,8 +55,39 @@
 	}
 
 	async function handleContextClicked(row: Row<K8sContext>) {
-		let workspaceId = pageData.params['workspaceId'];
-		await goto(`/workspaces/${workspaceId}/workloads/pods?user=${row.original.user}&cluster=${row.original.cluster}`)
+		let workspaceId = appData.activeWorkspace?.id;
+		let resourceName= "pods";
+		if(appData.activeWorkspace?.activeResource){
+			resourceName = appData.activeWorkspace?.activeResource.name
+		}else{
+			appDataStore.update(d =>{
+				if(d.activeWorkspace){
+					const activeContext: WorkspaceContext = {
+						id: row.original.cluster,
+						name: row.original.cluster,
+						active: true
+					}
+
+					let foundItem = d.activeWorkspace.contexts.find(item => item.id === activeContext.id);
+
+					if(foundItem) {
+						foundItem = {...foundItem, ...activeContext};
+					} else {
+						d.activeWorkspace.contexts = [...d.activeWorkspace.contexts, activeContext];
+					}
+
+					d.activeWorkspace = {
+						...d.activeWorkspace,
+						activeContext,
+						activeResource: {
+							name: resourceName
+						}
+					}
+				}
+				return d;
+			})
+		}
+		await goto(`/workspaces/${workspaceId}/workloads/${resourceName}?user=${row.original.user}&cluster=${row.original.cluster}`)
 	}
 </script>
 
@@ -68,8 +95,6 @@
 	<p>...waiting</p>
 {:then data}
 	<div class="flex flex-col w-full">
-		<h2>Workspaces</h2>
-
 		<div class="flex flex-col">
 			<div class="">
 				<div class="inline-block min-w-full">

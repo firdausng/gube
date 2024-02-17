@@ -48,11 +48,7 @@
 			</ul>
 		</div>
 		<div>
-			<div
-				class=""
-			>
-				<svelte:component this={tabData.active.component} />
-			</div>
+			<svelte:component this={tabData.active.component} />
 		</div>
 	</div>
 </footer>
