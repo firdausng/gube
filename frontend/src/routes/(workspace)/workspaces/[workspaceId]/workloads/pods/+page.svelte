@@ -6,6 +6,8 @@
 		getCoreRowModel,
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
+	import { page } from '$app/stores';
+	import type {Page} from "@sveltejs/kit";
 
 	type Person = {
 		firstName: string
@@ -15,6 +17,12 @@
 		status: string
 		progress: number
 	}
+
+	let pageData: Page<Record<string, string>>;
+	page.subscribe(p =>{
+		console.log(p)
+		pageData = p;
+	})
 
 	const defaultData: Person[] = [
 		{
@@ -208,8 +216,6 @@
 </script>
 
 <div class="flex flex-col w-full">
-	<h2>Deployments</h2>
-
 	<table class="table-auto w-full border-collapse ">
 		<thead>
 		{#each $table.getHeaderGroups() as headerGroup}

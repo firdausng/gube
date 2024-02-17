@@ -1,6 +1,6 @@
 package models
 
 type GenerictResult[T any] struct {
-	Data         T
-	ErrorMessage string
+	Data         T      `json:"data"`
+	ErrorMessage string `json:"errorMessage"`
 }

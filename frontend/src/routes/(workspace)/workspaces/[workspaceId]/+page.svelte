@@ -7,11 +7,22 @@
 		getCoreRowModel, type Table, type Row
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import type {Page} from "@sveltejs/kit";
 
 	type K8sContext = {
 		cluster: string
 		user: string
 	}
+
+	let pageData: Page<Record<string, string>>;
+	page.subscribe(p =>{
+		const searchParams = new URLSearchParams(p.url.searchParams)
+		console.log(p.url)
+		console.log(searchParams)
+		pageData = p;
+	})
 
 	const defaultColumns: ColumnDef<K8sContext>[] = [
 		{
@@ -36,19 +47,20 @@
 	async function getContextList(){
 		const list = await GetContextList()
 		let options = writable<TableOptions<K8sContext>>({
-			data: list.Data,
+			data: list.data,
 			columns: defaultColumns,
 			getCoreRowModel: getCoreRowModel(),
 		})
 		table = createSvelteTable(options)
-		if(list.Data){
-			return list.Data;
+		if(list.data){
+			return list.data;
 		}
 		throw new Error(list);
 	}
 
-	function handleContextClicked(row: Row<K8sContext>) {
-		console.log(row)
+	async function handleContextClicked(row: Row<K8sContext>) {
+		let workspaceId = pageData.params['workspaceId'];
+		await goto(`/workspaces/${workspaceId}/workloads/pods?user=${row.original.user}&cluster=${row.original.cluster}`)
 	}
 </script>
 

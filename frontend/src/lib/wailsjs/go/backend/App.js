@@ -10,6 +10,18 @@ export function GetContextList() {
   return window['go']['backend']['App']['GetContextList']();
 }
 
+export function GetPodList(arg1, arg2) {
+  return window['go']['backend']['App']['GetPodList'](arg1, arg2);
+}
+
 export function RunCommand(arg1) {
   return window['go']['backend']['App']['RunCommand'](arg1);
+}
+
+export function StreamLog(arg1, arg2, arg3) {
+  return window['go']['backend']['App']['StreamLog'](arg1, arg2, arg3);
+}
+
+export function StreamPods(arg1, arg2) {
+  return window['go']['backend']['App']['StreamPods'](arg1, arg2);
 }

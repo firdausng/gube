@@ -9,9 +9,9 @@ import (
 
 type Workspace struct {
 	ID          int64
-	Name        string `binding:"required"`
-	Description string `binding:"required"`
-	Active      bool   `binding:"required"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
 }
 
 func SetDefaultWorkspace() error {
