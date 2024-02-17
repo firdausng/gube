@@ -4,15 +4,17 @@
 	import {
 		createSvelteTable,
 		flexRender,
-		getCoreRowModel, type Row, type Table,
+		getCoreRowModel, renderComponent, type Row, type Table,
 	} from '@tanstack/svelte-table'
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
+	import ContainerRow from './ContainerRow.svelte'
 
 	type Pod = {
 		name: string
 		namespace: string
 		phase: string
+		containers: any
 	}
 
 	let appData: AppData;
@@ -39,6 +41,12 @@
 			cell: info => info.getValue(),
 			footer: info => info.column.id,
 		},
+		{
+			accessorKey: 'containers',
+			header: () => 'Containers',
+			cell: info => renderComponent(ContainerRow, {data: info.getValue() as any}),
+			footer: info => info.column.id,
+		},
 	]
 
 	let table:Readable<Table<Pod>>
@@ -46,13 +54,14 @@
 	let podListPromise = getPodList()
 	async function getPodList(){
 		if(appData){
-			const list = await GetPodList(appData.activeWorkspace.activeContext.name,"")
-			console.log(list)
-			let podList = list.data.map((l:any) => {
+			const response = await GetPodList(appData.activeWorkspace.activeContext.name,"")
+			console.log(response.data)
+			let podList = response.data.map((l:any) => {
 				const pod: Pod = {
 					name: l.metadata.name,
 					namespace: l.metadata.namespace,
 					phase: l.status.phase,
+					containers: l.spec.containers
 				}
 				return pod
 			})
@@ -70,7 +79,7 @@
 	}
 
 	function handlePodClicked(row: Row<Pod>) {
-		console.log(row.original)
+		console.log(row.renderValue('name'))
 	}
 
 
