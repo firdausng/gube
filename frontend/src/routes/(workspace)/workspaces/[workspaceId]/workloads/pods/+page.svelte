@@ -1,5 +1,7 @@
 <script lang="ts">
-	import {GetPodList} from "$lib/wailsjs/go/backend/App"
+	import {GetPodList,
+		// StreamPods
+	} from "$lib/wailsjs/go/backend/App"
 	import {type Readable, writable} from 'svelte/store'
 	import {
 		createSvelteTable,
@@ -9,6 +11,7 @@
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 	import ContainerRow from './ContainerRow.svelte'
+	import {onMount} from "svelte";
 
 	type Pod = {
 		name: string
@@ -51,12 +54,13 @@
 
 	let table:Readable<Table<Pod>>
 
-	let podListPromise = getPodList()
+
+	let podList;
 	async function getPodList(){
-		if(appData){
+		if(appData.activeWorkspace.activeContext){
 			const response = await GetPodList(appData.activeWorkspace.activeContext.name,"")
 			console.log(response.data)
-			let podList = response.data.map((l:any) => {
+			podList = response.data.map((l:any) => {
 				const pod: Pod = {
 					name: l.metadata.name,
 					namespace: l.metadata.namespace,
@@ -75,8 +79,15 @@
 
 			table = createSvelteTable(options)
 		}
-
 	}
+	let podListPromise = getPodList()
+
+	onMount(async ()=>{
+		// if(appData.activeWorkspace.activeContext){
+		// 	await StreamPods(appData.activeWorkspace.activeContext.name,"")
+		// }
+
+	})
 
 	function handlePodClicked(row: Row<Pod>) {
 		console.log(row.renderValue('name'))

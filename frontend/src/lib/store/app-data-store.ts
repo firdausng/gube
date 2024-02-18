@@ -9,18 +9,19 @@ export type WorkspaceContext = {
     name: string
     id: string
     active: boolean
+    activeResource: Resource
 }
 
 export type Workspace = {
     name: string
     id: string
     contexts: WorkspaceContext[]
-    activeContext: WorkspaceContext
-    activeResource: Resource
+    activeContext: WorkspaceContext|null
 }
 
 export type AppData = {
     activeWorkspace: Workspace
+    workspaces: Workspace[]
 }
 
 

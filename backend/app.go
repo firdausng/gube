@@ -3,7 +3,6 @@ package backend
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gube/backend/db"
 	"gube/backend/models"
@@ -24,6 +23,7 @@ type App struct {
 	config     *api.Config
 	cacheMutex sync.Mutex
 	eventCache map[string]bool
+	Workspace  models.Workspace
 }
 
 // NewApp creates a new App application struct
@@ -36,15 +36,20 @@ func NewApp() *App {
 func (app *App) Startup(ctx context.Context) {
 	app.Ctx = ctx
 	db.InitDB()
-	err := models.SetDefaultWorkspace()
+	workspace, err := models.SetDefaultWorkspace()
 	if err != nil {
 		panic(err.Error())
 	}
+	app.Workspace = workspace
 	app.config = services.GetConfig()
 }
 
 func (app *App) GetActiveWorkspace() models.GenerictResult[models.Workspace] {
 	return services.GetActiveWorkspace()
+}
+
+func (app App) GetWorkspaceList() models.GenerictResult[[]models.Workspace] {
+	return services.GetAllWorkspace()
 }
 
 func (app *App) GetContextList() models.GenerictResult[[]*api.Context] {
@@ -84,15 +89,15 @@ func (app *App) GetPodList(contextName string, namespaceName string) models.Gene
 }
 
 func (app *App) StreamPods(contextName string, namespaceName string) {
-	cacheKey := fmt.Sprintf("EmitPodList-%s-%s", contextName, namespaceName)
-
-	app.cacheMutex.Lock()
-	if app.eventCache[cacheKey] {
-		app.cacheMutex.Unlock()
-		return
-	}
-	app.eventCache[cacheKey] = true
-	app.cacheMutex.Unlock()
+	//cacheKey := fmt.Sprintf("EmitPodList-%s-%s", contextName, namespaceName)
+	//
+	//app.cacheMutex.Lock()
+	//if app.eventCache[cacheKey] {
+	//	app.cacheMutex.Unlock()
+	//	return
+	//}
+	//app.eventCache[cacheKey] = true
+	//app.cacheMutex.Unlock()
 
 	clientConfig := clientcmd.NewNonInteractiveClientConfig(*app.config, contextName, nil, nil)
 	restConfig, _ := clientConfig.ClientConfig()

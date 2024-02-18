@@ -8,8 +8,6 @@
 </script>
 
 <div class="flex flex-col w-full">
-	<h2>Deployments</h2>
-
 	<table class="table-auto w-full border-collapse border border-app-dark dark:border-app-light">
 		<thead>
 		<tr>

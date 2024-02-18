@@ -49,7 +49,7 @@
 			{/each}
 
 			<section class="dark:border-app-lightest p-1 flex items-center">
-				<p class="uppercase">{workspace.activeResource ? workspace.activeResource.name : ''}</p>
+				<p class="capitalize">{workspace.activeContext?.activeResource ? workspace.activeContext.activeResource.name : ''}</p>
 			</section>
 
 		{/if}

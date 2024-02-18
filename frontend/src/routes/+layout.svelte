@@ -1,28 +1,39 @@
-<script>
+<script lang="ts">
 	import "../app.css";
 	import ThemeToggle from "$lib/components/theme.svelte";
     import { appDataStore } from '$lib/store/app-data-store';
-    import {GetActiveWorkspace} from "$lib/wailsjs/go/backend/App";
+    import {GetActiveWorkspace, GetWorkspaceList} from "$lib/wailsjs/go/backend/App";
     import {goto} from "$app/navigation";
     import {onMount} from "svelte";
 
     onMount(async ()=>{
-        const activeWorkspace = await GetActiveWorkspace()
+        const listPromise = GetWorkspaceList();
+        const activeWorkspaceDataPromise = GetActiveWorkspace()
+        const [list, activeWorkspaceData] = await Promise.all([listPromise, activeWorkspaceDataPromise])
+        console.log(list, activeWorkspaceData)
+
         appDataStore.update(d =>{
+            const activeWorkspace = {
+                id: activeWorkspaceData.data.ID,
+                name: activeWorkspaceData.data.name,
+                // activeResource: null,
+                contexts: [],
+                activeContext: null
+            }
+
             return {
-                activeWorkspace: {
-                    id: activeWorkspace.data.ID,
-                    name: activeWorkspace.data.name,
-                    activeResource: null,
-                    contexts: []
-                }
+                activeWorkspace,
+                workspaces: list
             }
         })
-        if(activeWorkspace.data){
-            await goto(`/workspaces/${activeWorkspace.data.ID}`)
-            return activeWorkspace.data;
+
+        if(list.data.length > 1){
+            await goto(`/workspaces`)
+        }else{
+            if(activeWorkspaceData.data){
+                await goto(`/workspaces/${activeWorkspaceData.data.ID}`)
+            }
         }
-        throw new Error(activeWorkspace);
     })
 
 </script>

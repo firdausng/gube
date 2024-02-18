@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type {NavigationItem} from "$lib/types";
 	import 'iconify-icon';
+	import {type AppData, appDataStore, type Workspace} from '$lib/store/app-data-store';
+	import {goto} from "$app/navigation";
 
 	let navigationList: NavigationItem[] = [
 		{
@@ -54,10 +56,36 @@
 		{}
 	);
 
+	let activeResource = ''
+	let activeWorkspace: Workspace
+	appDataStore.subscribe(d =>{
+		activeWorkspace = d.activeWorkspace;
+		if(d.activeWorkspace.activeContext){
+			if(d.activeWorkspace.activeContext.activeResource.name.toLowerCase() !== activeResource.toLowerCase()){
+				console.log('resource', d.activeWorkspace.activeContext.activeResource.name, 'and', activeResource)
+				activeResource = d.activeWorkspace.activeContext.activeResource.name
+			}
+
+		}
+	})
+
 	function toggleOpenFolder(name:string) {
 		folderSettings = folderSettings.map(f => ({...f, open: (f.name === name) ? !f.open: f.open}));
 		console.log(folderSettings);
 	}
+
+	async function handleClick(item: NavigationItem){
+		activeResource = item.name.toLowerCase();
+		appDataStore.update(d =>{
+			if(d.activeWorkspace.activeContext){
+				d.activeWorkspace.activeContext.activeResource.name = item.name.toLowerCase()
+			}
+			return d;
+		})
+
+		await goto(`/workspaces/${activeWorkspace.name}/${item.path}`)
+	}
+
 </script>
 
 <div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-light dark:bg-app-dark pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
@@ -70,7 +98,12 @@
 			{#if folder.open}
 				<div class="flex flex-col overflow-y-auto pl-8">
 					{#each groupedByFolder[folder.name] as navigation (navigation)}
-						<a class="py-1 break-words" href="{`/workspaces/bac/${navigation.path}`}">{navigation.name}</a>
+						<button class="drop-shadow-2xl py-1 break-words text-start {activeResource.toLowerCase() === navigation.name.toLowerCase() ? 'font-semibold shadow-inner shadow-app-lightest dark:shadow-app-darkest bg-app-lightest/80 dark:bg-app-darkest/80': ''}"
+								on:click={()=> handleClick(navigation)}>
+							<span class="px-1">
+								{navigation.name}
+							</span>
+						</button>
 					{/each}
 				</div>
 			{/if}

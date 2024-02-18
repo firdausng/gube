@@ -8,6 +8,8 @@ export function GetContextList():Promise<models.GenerictResult[[]*k8s>;
 
 export function GetPodList(arg1:string,arg2:string):Promise<models.GenerictResult[[]k8s>;
 
+export function GetWorkspaceList():Promise<models.GenerictResult[[]gube/backend/models>;
+
 export function RunCommand(arg1:string):Promise<models.GenerictResult[string]>;
 
 export function StreamLog(arg1:string,arg2:string,arg3:string):Promise<void>;

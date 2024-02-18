@@ -55,38 +55,46 @@
 	}
 
 	async function handleContextClicked(row: Row<K8sContext>) {
-		let workspaceId = appData.activeWorkspace?.id;
-		let resourceName= "pods";
-		if(appData.activeWorkspace?.activeResource){
-			resourceName = appData.activeWorkspace?.activeResource.name
-		}else{
-			appDataStore.update(d =>{
-				if(d.activeWorkspace){
-					const activeContext: WorkspaceContext = {
-						id: row.original.cluster,
-						name: row.original.cluster,
-						active: true
-					}
+		/*
+		* 1. check if context already exist in active workspace context list
+		* 2. if not exist,
+		* 		- create the context
+		* 		- add the context to the list
+		* 3. update active context to the selected context
+		* 4. set the resources, navigate to the resource
+		* */
 
-					let foundItem = d.activeWorkspace.contexts.find(item => item.id === activeContext.id);
+		let workspaceId = appData.activeWorkspace.id;
+		let resourceName= appData.activeWorkspace.activeContext?.activeResource.name ?
+				appData.activeWorkspace.activeContext?.activeResource.name:
+				"pods";
 
-					if(foundItem) {
-						foundItem = {...foundItem, ...activeContext};
-					} else {
-						d.activeWorkspace.contexts = [...d.activeWorkspace.contexts, activeContext];
-					}
-
-					d.activeWorkspace = {
-						...d.activeWorkspace,
-						activeContext,
-						activeResource: {
-							name: resourceName
-						}
-					}
+		appDataStore.update(d =>{
+			const activeContext: WorkspaceContext = {
+				id: row.original.cluster,
+				name: row.original.cluster,
+				active: true,
+				activeResource: {
+					name: resourceName
 				}
-				return d;
-			})
-		}
+			}
+
+			let foundItem = d.activeWorkspace.contexts.find(item => item.id === activeContext.id);
+
+			if(foundItem) {
+				foundItem = {...foundItem, ...activeContext};
+			} else {
+				d.activeWorkspace.contexts = [...d.activeWorkspace.contexts, activeContext];
+			}
+
+			d.activeWorkspace = {
+				...d.activeWorkspace,
+				activeContext
+			}
+			return d;
+		})
+
+		console.log("appData", appData)
 		await goto(`/workspaces/${workspaceId}/workloads/${resourceName}?user=${row.original.user}&cluster=${row.original.cluster}`)
 	}
 </script>

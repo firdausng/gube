@@ -14,6 +14,10 @@ export function GetPodList(arg1, arg2) {
   return window['go']['backend']['App']['GetPodList'](arg1, arg2);
 }
 
+export function GetWorkspaceList() {
+  return window['go']['backend']['App']['GetWorkspaceList']();
+}
+
 export function RunCommand(arg1) {
   return window['go']['backend']['App']['RunCommand'](arg1);
 }

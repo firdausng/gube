@@ -14,7 +14,7 @@ type Workspace struct {
 	Active      bool   `json:"active"`
 }
 
-func SetDefaultWorkspace() error {
+func SetDefaultWorkspace() (Workspace, error) {
 	defaultWorkspace, err := GetEventByName("default")
 
 	if err != nil {
@@ -27,15 +27,15 @@ func SetDefaultWorkspace() error {
 			err = defaultWorkspace.Save()
 			if err != nil {
 				errorStr := fmt.Sprintf("Error saving default workspace: %s", err)
-				return errors.New(errorStr)
+				return Workspace{}, errors.New(errorStr)
 
 			}
-			return nil
+			return *defaultWorkspace, nil
 		}
-		return err
+		return Workspace{}, err
 	}
 
-	return nil
+	return Workspace{}, nil
 }
 
 func (workspace Workspace) Save() error {
@@ -59,7 +59,7 @@ func (workspace Workspace) Save() error {
 	return err
 }
 
-func (workspace Workspace) GetAllWorkspaces() ([]Workspace, error) {
+func GetAllWorkspaces() ([]Workspace, error) {
 	query := "SELECT * FROM workspaces"
 	rows, err := db.DB.Query(query)
 	if err != nil {
@@ -71,7 +71,7 @@ func (workspace Workspace) GetAllWorkspaces() ([]Workspace, error) {
 
 	for rows.Next() {
 		var e Workspace
-		err := rows.Scan(&e.ID, &e.Name, &e.Description)
+		err := rows.Scan(&e.ID, &e.Name, &e.Description, &e.Active)
 
 		if err != nil {
 			return nil, err
@@ -143,11 +143,4 @@ func GetActiveWorkspace() (*Workspace, error) {
 		return nil, err
 	}
 	return &workspace, nil
-
-	//var workspace Workspace
-	//err := db.DB.QueryRow("SELECT * FROM workspaces WHERE active = 1").Scan(&workspace.ID, &workspace.Name, &workspace.Description)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return &workspace, nil
 }

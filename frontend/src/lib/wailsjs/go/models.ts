@@ -32,6 +32,54 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class Workspace {
+	    name: string;
+	    description: string;
+	    active: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Workspace(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.description = source["description"];
+	        this.active = source["active"];
+	    }
+	}
+	export class GenerictResult[[]gube/backend/models.Workspace] {
+	    data: Workspace[];
+	    errorMessage: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GenerictResult[[]gube/backend/models.Workspace](source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.data = this.convertValues(source["data"], Workspace);
+	        this.errorMessage = source["errorMessage"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class GenerictResult[[]k8s.io/api/core/v1.Pod] {
 	    data: v1.Pod[];
 	    errorMessage: string;
@@ -63,22 +111,6 @@ export namespace models {
 		    }
 		    return a;
 		}
-	}
-	export class Workspace {
-	    name: string;
-	    description: string;
-	    active: boolean;
-	
-	    static createFrom(source: any = {}) {
-	        return new Workspace(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.name = source["name"];
-	        this.description = source["description"];
-	        this.active = source["active"];
-	    }
 	}
 	export class GenerictResult[gube/backend/models.Workspace] {
 	    data: Workspace;
