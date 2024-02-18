@@ -9,8 +9,6 @@ import (
 	"gube/backend/services"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"os/exec"
@@ -20,7 +18,7 @@ import (
 // App struct
 type App struct {
 	Ctx        context.Context
-	config     *api.Config
+	service    *services.AppService
 	cacheMutex sync.Mutex
 	eventCache map[string]bool
 	Workspace  models.Workspace
@@ -41,19 +39,36 @@ func (app *App) Startup(ctx context.Context) {
 		panic(err.Error())
 	}
 	app.Workspace = workspace
-	app.config = services.GetConfig()
+	app.service = services.NewServiceContainer()
 }
 
 func (app *App) GetActiveWorkspace() models.GenerictResult[models.Workspace] {
 	return services.GetActiveWorkspace()
 }
 
-func (app App) GetWorkspaceList() models.GenerictResult[[]models.Workspace] {
+func (app *App) GetWorkspaceList() models.GenerictResult[[]models.Workspace] {
 	return services.GetAllWorkspace()
 }
 
+//func (app *App) GetWorkspaceList() models.GenerictResult[[]models.Workspace] {
+//	return services.GetAllWorkspace()
+//}
+
+//func (app *App) GetNamespaces(contextName string) {
+//	clientConfig := clientcmd.NewNonInteractiveClientConfig(*app.config, contextName, nil, nil)
+//	restConfig, _ := clientConfig.ClientConfig()
+//
+//	clientset, err := kubernetes.NewForConfig(restConfig)
+//	if err != nil {
+//		runtime.LogError(app.Ctx, err.Error())
+//		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
+//		log.Printf("Error getting pod list %s\n", result)
+//	}
+//	namespaceList, err := clientset.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+//}
+
 func (app *App) GetContextList() models.GenerictResult[[]*api.Context] {
-	return services.GetContextList(app.config)
+	return app.service.Context.GetContextList()
 }
 
 func (app *App) RunCommand(command string) models.GenerictResult[string] {
@@ -72,18 +87,13 @@ func (app *App) GetPodList(contextName string, namespaceName string) models.Gene
 	if len(namespaceName) == 0 {
 		namespaceName = "default"
 	}
-	clientConfig := clientcmd.NewNonInteractiveClientConfig(*app.config, contextName, nil, nil)
-	restConfig, _ := clientConfig.ClientConfig()
-
-	clientset, err := kubernetes.NewForConfig(restConfig)
+	client, err := app.service.Context.GetContextClient(contextName)
 	if err != nil {
 		runtime.LogError(app.Ctx, err.Error())
-		//logger.Logger.Error(err.Error())
-		//log.Printf("This is a %s message", err.Error())
 		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
-		return result
+		log.Printf("Error getting pod list %s\n", result)
 	}
-	pods, err := clientset.CoreV1().Pods(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	pods, err := client.CoreV1().Pods(namespaceName).List(context.TODO(), metav1.ListOptions{})
 	result := models.GenerictResult[[]corev1.Pod]{Data: pods.Items}
 	return result
 }
@@ -99,18 +109,13 @@ func (app *App) StreamPods(contextName string, namespaceName string) {
 	//app.eventCache[cacheKey] = true
 	//app.cacheMutex.Unlock()
 
-	clientConfig := clientcmd.NewNonInteractiveClientConfig(*app.config, contextName, nil, nil)
-	restConfig, _ := clientConfig.ClientConfig()
-
-	clientset, err := kubernetes.NewForConfig(restConfig)
+	client, err := app.service.Context.GetContextClient(contextName)
 	if err != nil {
 		runtime.LogError(app.Ctx, err.Error())
-		//logger.Logger.Error(err.Error())
-		//log.Printf("This is a %s message", err.Error())
 		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
 		log.Printf("Error getting pod list %s\n", result)
 	}
-	podWatcher, err := clientset.CoreV1().Pods(namespaceName).Watch(context.Background(), metav1.ListOptions{})
+	podWatcher, err := client.CoreV1().Pods(namespaceName).Watch(context.Background(), metav1.ListOptions{})
 
 	// create a channel to stop the watch when needed
 	stop := make(chan struct{})
@@ -135,7 +140,7 @@ func (app *App) StreamPods(contextName string, namespaceName string) {
 }
 
 func (app *App) StreamLog(contextName string, namespaceName string, podName string) {
-	podLogs, err := services.StreamPodLogs(app.config, contextName, namespaceName, podName)
+	podLogs, err := app.service.Pod.StreamPodLogs(contextName, namespaceName, podName)
 	if err != nil {
 		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + "pd:" + podName + err.Error()}
 		log.Printf("Error getting deployment logs %s\n", result)

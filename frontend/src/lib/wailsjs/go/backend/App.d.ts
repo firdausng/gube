@@ -6,6 +6,8 @@ export function GetActiveWorkspace():Promise<models.GenerictResult[gube/backend/
 
 export function GetContextList():Promise<models.GenerictResult[[]*k8s>;
 
+export function GetNamespaces():Promise<void>;
+
 export function GetPodList(arg1:string,arg2:string):Promise<models.GenerictResult[[]k8s>;
 
 export function GetWorkspaceList():Promise<models.GenerictResult[[]gube/backend/models>;

@@ -5,11 +5,19 @@ import (
 	"gube/backend/models"
 	"io"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 )
+
+type PodService struct {
+	contextService *ContextService
+}
+
+func newPodService(contextService *ContextService) *PodService {
+	container := &PodService{
+		contextService: contextService,
+	}
+	return container
+}
 
 //func StreamPodList(config *api.Config, contextName string, namespaceName string) (*v1.Pod, error) {
 //	clientConfig := clientcmd.NewNonInteractiveClientConfig(*config, contextName, nil, nil)
@@ -49,11 +57,8 @@ import (
 //	return pods, nil
 //}
 
-func StreamPodLogs(config *api.Config, contextName string, namespaceName string, podName string) (io.ReadCloser, error) {
-	clientConfig := clientcmd.NewNonInteractiveClientConfig(*config, contextName, &clientcmd.ConfigOverrides{}, nil)
-	restConfig, _ := clientConfig.ClientConfig()
-
-	clientset, err := kubernetes.NewForConfig(restConfig)
+func (podService PodService) StreamPodLogs(contextName string, namespaceName string, podName string) (io.ReadCloser, error) {
+	client, err := podService.contextService.GetContextClient(contextName)
 	if err != nil {
 		result := models.GenerictResult[string]{ErrorMessage: "error1: " + err.Error()}
 		log.Printf("Error getting deployment logs %s\n", result)
@@ -63,7 +68,7 @@ func StreamPodLogs(config *api.Config, contextName string, namespaceName string,
 		Follow:     true,
 		Timestamps: true,
 	}
-	req := clientset.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
+	req := client.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(context.TODO())
 	if err != nil {
 		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + "pd:" + podName + err.Error()}

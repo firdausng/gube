@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {GetPodList,
-		// StreamPods
+		StreamPods
 	} from "$lib/wailsjs/go/backend/App"
 	import {type Readable, writable} from 'svelte/store'
 	import {

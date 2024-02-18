@@ -88,26 +88,28 @@
 
 </script>
 
-<div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-light dark:bg-app-dark pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
-	{#each folderSettings as folder (folder.name)}
-		<div>
-			<button class="flex gap-1" on:click={()=>toggleOpenFolder(folder.name)}>
-				<iconify-icon icon={folder.icon} class="px-1 text-xl cursor-pointer text-app-dark dark:text-app-lightest text-center w-full"></iconify-icon>
-				<span class="break-words">{folder.name}</span>
-			</button>
-			{#if folder.open}
-				<div class="flex flex-col overflow-y-auto pl-8">
-					{#each groupedByFolder[folder.name] as navigation (navigation)}
-						<button class="drop-shadow-2xl py-1 break-words text-start {activeResource.toLowerCase() === navigation.name.toLowerCase() ? 'font-semibold shadow-inner shadow-app-lightest dark:shadow-app-darkest bg-app-lightest/80 dark:bg-app-darkest/80': ''}"
-								on:click={()=> handleClick(navigation)}>
+{#if activeWorkspace.activeContext}
+	<div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-light dark:bg-app-dark pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
+		{#each folderSettings as folder (folder.name)}
+			<div>
+				<button class="flex gap-1" on:click={()=>toggleOpenFolder(folder.name)}>
+					<iconify-icon icon={folder.icon} class="px-1 text-xl cursor-pointer text-app-dark dark:text-app-lightest text-center w-full"></iconify-icon>
+					<span class="break-words">{folder.name}</span>
+				</button>
+				{#if folder.open}
+					<div class="flex flex-col overflow-y-auto pl-8">
+						{#each groupedByFolder[folder.name] as navigation (navigation)}
+							<button class="drop-shadow-sm rounded py-1 break-words text-start {activeResource.toLowerCase() === navigation.name.toLowerCase() ? 'font-semibold shadow-inner shadow-app-lightest dark:shadow-app-darkest bg-app-lightest/80 dark:bg-app-darkest/80': ''}"
+									on:click={()=> handleClick(navigation)}>
 							<span class="px-1">
 								{navigation.name}
 							</span>
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	{/each}
-</div>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/each}
+	</div>
+{/if}
 

@@ -2,23 +2,55 @@ package services
 
 import (
 	"flag"
+	"fmt"
 	"gube/backend/models"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/homedir"
 	"path/filepath"
 )
 
-func GetContextList(config *api.Config) models.GenerictResult[[]*api.Context] {
+type ContextService struct {
+	Config        *api.Config
+	contextClient map[string]*kubernetes.Clientset
+}
+
+func newContextService() *ContextService {
+	config := getConfig()
+	container := &ContextService{
+		Config:        config,
+		contextClient: make(map[string]*kubernetes.Clientset),
+	}
+	return container
+}
+
+func (service *ContextService) GetContextClient(contextName string) (*kubernetes.Clientset, error) {
+	if _, ok := service.contextClient[contextName]; ok {
+		fmt.Println("Client already exists for this context")
+	} else {
+		clientConfig := clientcmd.NewNonInteractiveClientConfig(*service.Config, contextName, nil, nil)
+		restConfig, _ := clientConfig.ClientConfig()
+
+		client, err := kubernetes.NewForConfig(restConfig)
+		if err != nil {
+			return nil, err
+		}
+		service.contextClient[contextName] = client
+	}
+	return service.contextClient[contextName], nil
+}
+
+func (service *ContextService) GetContextList() models.GenerictResult[[]*api.Context] {
 	var contexts []*api.Context
-	for _, context := range config.Contexts {
+	for _, context := range service.Config.Contexts {
 		contexts = append(contexts, context)
 	}
 	result := models.GenerictResult[[]*api.Context]{Data: contexts}
 	return result
 }
 
-func GetConfig() *api.Config {
+func getConfig() *api.Config {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")

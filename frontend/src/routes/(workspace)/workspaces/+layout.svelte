@@ -7,7 +7,7 @@
 		<TopNav />
 	</div>
 
-	<div class="bg-app-lightest dark:bg-app-darkest w-full h-full p-1 pt-8">
+	<div class="bg-app-lightest dark:bg-app-darkest w-full h-full pt-8">
 		<slot />
 	</div>
 </div>

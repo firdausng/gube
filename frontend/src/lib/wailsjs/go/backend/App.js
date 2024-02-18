@@ -10,6 +10,10 @@ export function GetContextList() {
   return window['go']['backend']['App']['GetContextList']();
 }
 
+export function GetNamespaces() {
+  return window['go']['backend']['App']['GetNamespaces']();
+}
+
 export function GetPodList(arg1, arg2) {
   return window['go']['backend']['App']['GetPodList'](arg1, arg2);
 }
