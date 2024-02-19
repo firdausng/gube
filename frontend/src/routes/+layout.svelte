@@ -2,12 +2,12 @@
 	import "../app.css";
 	import ThemeToggle from "$lib/components/theme.svelte";
     import { appDataStore } from '$lib/store/app-data-store';
-    import {GetActiveWorkspace, GetWorkspaceList} from "$lib/wailsjs/go/backend/App";
+    import {GetActiveWorkspace, GetAllWorkspace} from "$lib/wailsjs/go/services/WorkspaceService";
     import {goto} from "$app/navigation";
     import {onMount} from "svelte";
 
     onMount(async ()=>{
-        const listPromise = GetWorkspaceList();
+        const listPromise = GetAllWorkspace();
         const activeWorkspaceDataPromise = GetActiveWorkspace()
         const [list, activeWorkspaceData] = await Promise.all([listPromise, activeWorkspaceDataPromise])
         console.log(list, activeWorkspaceData)

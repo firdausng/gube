@@ -1,3 +1,240 @@
+export namespace api {
+	
+	export class Context {
+	    cluster: string;
+	    user: string;
+	    namespace?: string;
+	    extensions?: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new Context(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cluster = source["cluster"];
+	        this.user = source["user"];
+	        this.namespace = source["namespace"];
+	        this.extensions = source["extensions"];
+	    }
+	}
+	export class ExecEnvVar {
+	    name: string;
+	    value: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ExecEnvVar(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.value = source["value"];
+	    }
+	}
+	export class ExecConfig {
+	    command: string;
+	    args: string[];
+	    env: ExecEnvVar[];
+	    apiVersion?: string;
+	    installHint?: string;
+	    provideClusterInfo: boolean;
+	    interactiveMode?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ExecConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.command = source["command"];
+	        this.args = source["args"];
+	        this.env = this.convertValues(source["env"], ExecEnvVar);
+	        this.apiVersion = source["apiVersion"];
+	        this.installHint = source["installHint"];
+	        this.provideClusterInfo = source["provideClusterInfo"];
+	        this.interactiveMode = source["interactiveMode"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class AuthProviderConfig {
+	    name: string;
+	    config?: {[key: string]: string};
+	
+	    static createFrom(source: any = {}) {
+	        return new AuthProviderConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.config = source["config"];
+	    }
+	}
+	export class AuthInfo {
+	    "client-certificate?"?: string;
+	    "client-certificate-data?"?: number[];
+	    "client-key?"?: string;
+	    "client-key-data?"?: number[];
+	    token?: string;
+	    tokenFile?: string;
+	    "act-as?"?: string;
+	    "act-as-uid?"?: string;
+	    "act-as-groups?"?: string[];
+	    "act-as-user-extra"?: {[key: string]: string[]};
+	    username?: string;
+	    password?: string;
+	    // Go type: AuthProviderConfig
+	    "auth-provider?"?: any;
+	    // Go type: ExecConfig
+	    exec?: any;
+	    extensions?: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new AuthInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this["client-certificate"] = source["client-certificate"];
+	        this["client-certificate-data"] = source["client-certificate-data"];
+	        this["client-key"] = source["client-key"];
+	        this["client-key-data"] = source["client-key-data"];
+	        this.token = source["token"];
+	        this.tokenFile = source["tokenFile"];
+	        this["act-as"] = source["act-as"];
+	        this["act-as-uid"] = source["act-as-uid"];
+	        this["act-as-groups"] = source["act-as-groups"];
+	        this["act-as-user-extra"] = source["act-as-user-extra"];
+	        this.username = source["username"];
+	        this.password = source["password"];
+	        this["auth-provider"] = this.convertValues(source["auth-provider"], null);
+	        this.exec = this.convertValues(source["exec"], null);
+	        this.extensions = source["extensions"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class Cluster {
+	    server: string;
+	    "tls-server-name?"?: string;
+	    "insecure-skip-tls-verify?"?: boolean;
+	    "certificate-authority?"?: string;
+	    "certificate-authority-data?"?: number[];
+	    "proxy-url?"?: string;
+	    "disable-compression?"?: boolean;
+	    extensions?: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new Cluster(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.server = source["server"];
+	        this["tls-server-name"] = source["tls-server-name"];
+	        this["insecure-skip-tls-verify"] = source["insecure-skip-tls-verify"];
+	        this["certificate-authority"] = source["certificate-authority"];
+	        this["certificate-authority-data"] = source["certificate-authority-data"];
+	        this["proxy-url"] = source["proxy-url"];
+	        this["disable-compression"] = source["disable-compression"];
+	        this.extensions = source["extensions"];
+	    }
+	}
+	export class Preferences {
+	    colors?: boolean;
+	    extensions?: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new Preferences(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.colors = source["colors"];
+	        this.extensions = source["extensions"];
+	    }
+	}
+	export class Config {
+	    kind?: string;
+	    apiVersion?: string;
+	    preferences: Preferences;
+	    clusters: {[key: string]: Cluster};
+	    users: {[key: string]: AuthInfo};
+	    contexts: {[key: string]: Context};
+	    "current-context": string;
+	    extensions?: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new Config(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.kind = source["kind"];
+	        this.apiVersion = source["apiVersion"];
+	        this.preferences = this.convertValues(source["preferences"], Preferences);
+	        this.clusters = source["clusters"];
+	        this.users = source["users"];
+	        this.contexts = source["contexts"];
+	        this["current-context"] = source["current-context"];
+	        this.extensions = source["extensions"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+
+}
+
 export namespace models {
 	
 	export class GenerictResult[[]*k8s.io/client-go/tools/clientcmd/api.Context] {
@@ -143,20 +380,6 @@ export namespace models {
 		    }
 		    return a;
 		}
-	}
-	export class GenerictResult[string] {
-	    data: string;
-	    errorMessage: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new GenerictResult[string](source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.data = source["data"];
-	        this.errorMessage = source["errorMessage"];
-	    }
 	}
 
 }

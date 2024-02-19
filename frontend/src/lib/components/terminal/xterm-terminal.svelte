@@ -11,7 +11,7 @@
 	import { SearchBarAddon } from 'xterm-addon-search-bar';
 	import { onMount } from 'svelte';
 	import { AdventureTime, Atom, AlienBlood, Afterglow, Batman, Blazer } from 'xterm-theme';
-	import { RunCommand } from '$lib/wailsjs/go/backend/App';
+	// import { RunCommand } from '$lib/wailsjs/go/backend/App';
 
 	let terminalElement: HTMLElement;
 	let termFit;
@@ -82,19 +82,19 @@
 
 				let inputCmd = lines[lines.length - 1].substring(2);
 				console.log(cmdStr, inputCmd);
-				RunCommand(cmdStr).then(async cmd => {
-					cmdStr = cmd.Data + newline;
-					term.writeln(cmdStr);
-					cmd = await RunCommand(inputCmd);
-					console.log(cmd);
-					if (cmd.ErrorMessage.length === 0) {
-						term.write(cmd.Data);
-					} else {
-						term.write(cmd.ErrorMessage);
-					}
-					term.writeln("");
-					term.write(startLineStr)
-				});
+				// RunCommand(cmdStr).then(async cmd => {
+				// 	cmdStr = cmd.Data + newline;
+				// 	term.writeln(cmdStr);
+				// 	cmd = await RunCommand(inputCmd);
+				// 	console.log(cmd);
+				// 	if (cmd.ErrorMessage.length === 0) {
+				// 		term.write(cmd.Data);
+				// 	} else {
+				// 		term.write(cmd.ErrorMessage);
+				// 	}
+				// 	term.writeln("");
+				// 	term.write(startLineStr)
+				// });
 			} else {
 				// Add entered characters to command string
 				cmdStr += data;

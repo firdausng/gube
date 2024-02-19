@@ -1,19 +1,23 @@
 package services
 
 import (
+	"context"
 	"gube/backend/models"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 type NamespaceService struct {
+	ctx            context.Context
 	contextService *ContextService
 }
 
-func newNamespaceService(contextService *ContextService) *NamespaceService {
-	container := &NamespaceService{
-		contextService: contextService,
-	}
-	return container
+func NewNamespaceService() *NamespaceService {
+	return &NamespaceService{}
+}
+
+func (service *NamespaceService) SetContext(ctx context.Context, contextService *ContextService) {
+	service.contextService = contextService
+	service.ctx = ctx
 }
 
 func (service NamespaceService) GetNamespaceList() models.GenerictResult[[]*api.Context] {

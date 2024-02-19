@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {GetPodList,
 		StreamPods
-	} from "$lib/wailsjs/go/backend/App"
+	} from "$lib/wailsjs/go/services/PodService"
 	import {type Readable, writable} from 'svelte/store'
 	import {
 		createSvelteTable,
@@ -12,6 +12,7 @@
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 	import ContainerRow from './ContainerRow.svelte'
 	import {onMount} from "svelte";
+	import {EventsOff, EventsOn} from "$lib/wailsjs/runtime";
 
 	type Pod = {
 		name: string
@@ -24,6 +25,8 @@
 	appDataStore.subscribe(data =>{
 		appData = data;
 	})
+
+	let eventName = '';
 
 	const defaultColumns: ColumnDef<Pod>[] = [
 		{
@@ -54,11 +57,10 @@
 
 	let table:Readable<Table<Pod>>
 
-
 	let podList;
 	async function getPodList(){
 		if(appData.activeWorkspace.activeContext){
-			const response = await GetPodList(appData.activeWorkspace.activeContext.name,"")
+			const response = await GetPodList(appData.activeWorkspace.name, appData.activeWorkspace.activeContext.name,"")
 			console.log(response.data)
 			podList = response.data.map((l:any) => {
 				const pod: Pod = {
@@ -85,16 +87,13 @@
 	onMount(async ()=>{
 		// if(appData.activeWorkspace.activeContext){
 		// 	await StreamPods(appData.activeWorkspace.activeContext.name,"")
+		// 	eventName = `EmitPodList-${appData.activeWorkspace.id}-${appData.activeWorkspace.activeContext.name}-default`
 		// }
-
 	})
 
 	function handlePodClicked(row: Row<Pod>) {
 		console.log(row.renderValue('name'))
 	}
-
-
-
 </script>
 
 {#await podListPromise}
@@ -131,7 +130,7 @@
 								hover:text-app-darkest dark:hover:text-app-lightest
 								cursor-pointer">
 									{#each row.getVisibleCells() as cell}
-										<td class="whitespace-nowrap px-2 py-2 font-sm">
+										<td class="whitespace-nowrap px-2 py-1 font-sm">
 											<svelte:component
 													this={flexRender(cell.column.columnDef.cell, cell.getContext())}
 											/>

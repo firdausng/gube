@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/menu"
@@ -9,17 +10,21 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gube/backend"
+	"gube/backend/services"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
-
 	go startServer()
 
 	// Create an instance of the app structure
 	app := backend.NewApp()
+	contextService := services.NewContextService()
+	workspaceService := services.NewWorkspaceService()
+	podService := services.NewPodService()
+	namespaceService := services.NewNamespaceService()
 
 	AppMenu := menu.NewMenu()
 	FileMenu := AppMenu.AddSubmenu("File")
@@ -44,9 +49,18 @@ func main() {
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 255},
-		OnStartup:        app.Startup,
+		OnStartup: func(ctx context.Context) {
+			contextService.SetContext(ctx)
+			workspaceService.SetContext(ctx)
+			podService.SetContext(ctx, contextService, workspaceService)
+			namespaceService.SetContext(ctx, contextService)
+			app.Startup(ctx)
+		},
 		Bind: []interface{}{
-			app,
+			contextService,
+			workspaceService,
+			podService,
+			namespaceService,
 		},
 	})
 

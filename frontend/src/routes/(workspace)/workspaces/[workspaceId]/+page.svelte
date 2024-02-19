@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {GetContextList} from "$lib/wailsjs/go/backend/App"
+	import {GetContextList} from "$lib/wailsjs/go/services/ContextService"
 	import {type Readable, writable} from 'svelte/store'
 	import {
 		createSvelteTable,

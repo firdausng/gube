@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"gube/backend/models"
@@ -12,17 +13,20 @@ import (
 )
 
 type ContextService struct {
+	ctx           context.Context
 	Config        *api.Config
 	contextClient map[string]*kubernetes.Clientset
 }
 
-func newContextService() *ContextService {
+func NewContextService() *ContextService {
+	return &ContextService{}
+}
+
+func (service *ContextService) SetContext(ctx context.Context) {
 	config := getConfig()
-	container := &ContextService{
-		Config:        config,
-		contextClient: make(map[string]*kubernetes.Clientset),
-	}
-	return container
+	service.Config = config
+	service.contextClient = make(map[string]*kubernetes.Clientset)
+	service.ctx = ctx
 }
 
 func (service *ContextService) GetContextClient(contextName string) (*kubernetes.Clientset, error) {

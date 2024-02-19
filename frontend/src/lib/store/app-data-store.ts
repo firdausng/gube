@@ -10,7 +10,6 @@ export type WorkspaceContext = {
     id: string
     active: boolean
     activeResource: Resource
-    workspaceList: Resource[]
 }
 
 export type Workspace = {

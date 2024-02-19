@@ -2,79 +2,85 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gube/backend/models"
-	"io"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
+	"sync"
 )
 
 type PodService struct {
-	contextService *ContextService
+	ctx              context.Context
+	contextService   *ContextService
+	workspaceService *WorkspaceService
+	cacheMutex       sync.Mutex
+	eventCache       map[string]bool
 }
 
-func newPodService(contextService *ContextService) *PodService {
-	container := &PodService{
-		contextService: contextService,
+func NewPodService() *PodService {
+	return &PodService{}
+}
+
+func (service *PodService) SetContext(ctx context.Context, contextService *ContextService, workspaceService *WorkspaceService) {
+	service.contextService = contextService
+	service.workspaceService = workspaceService
+	service.ctx = ctx
+}
+
+func (podService *PodService) GetPodList(workspaceId, contextName, namespaceName string) models.GenerictResult[[]corev1.Pod] {
+	if len(namespaceName) == 0 {
+		namespaceName = "default"
 	}
-	return container
-}
-
-//func StreamPodList(config *api.Config, contextName string, namespaceName string) (*v1.Pod, error) {
-//	clientConfig := clientcmd.NewNonInteractiveClientConfig(*config, contextName, nil, nil)
-//	restConfig, _ := clientConfig.ClientConfig()
-//
-//	clientset, err := kubernetes.NewForConfig(restConfig)
-//	if err != nil {
-//		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
-//		log.Printf("Error getting pod list %s\n", result)
-//	}
-//	pods, err := clientset.CoreV1().Pods(namespaceName).Watch(context.TODO(), metav1.ListOptions{})
-//	if err != nil {
-//		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + err.Error()}
-//		log.Printf("Error getting pods %s\n", result)
-//	}
-//
-//	stop := make(chan struct{})
-//	for {
-//		select {
-//		case event := <-pods.ResultChan():
-//			pod, ok := event.Object.(*corev1.Pod)
-//			if !ok {
-//				// not a pod - continue
-//				continue
-//			}
-//			// handle the pod instance as required
-//			fmt.Printf("Received watch event: %v\n", pod.Name)
-//			//runtime.EventsEmit(app.Ctx, "", pod)
-//			return pod, nil
-//		case <-stop:
-//			pods.Stop()
-//			return
-//		}
-//	}
-//
-//
-//	return pods, nil
-//}
-
-func (podService PodService) StreamPodLogs(contextName string, namespaceName string, podName string) (io.ReadCloser, error) {
 	client, err := podService.contextService.GetContextClient(contextName)
 	if err != nil {
-		result := models.GenerictResult[string]{ErrorMessage: "error1: " + err.Error()}
-		log.Printf("Error getting deployment logs %s\n", result)
+		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
+		log.Printf("Error getting pod list %s\n", result)
 	}
+	pods, err := client.CoreV1().Pods(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	result := models.GenerictResult[[]corev1.Pod]{Data: pods.Items}
+	return result
+}
 
-	podLogOpts := corev1.PodLogOptions{
-		Follow:     true,
-		Timestamps: true,
+func (podService *PodService) StreamPods(workspaceId, contextName, namespaceName string) {
+	cacheKey := fmt.Sprintf("EmitPodList-%s-%s-%s", workspaceId, contextName, namespaceName)
+
+	podService.cacheMutex.Lock()
+	if podService.eventCache[cacheKey] {
+		podService.cacheMutex.Unlock()
+		return
 	}
-	req := client.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
-	podLogs, err := req.Stream(context.TODO())
+	podService.eventCache[cacheKey] = true
+	podService.cacheMutex.Unlock()
+
+	client, err := podService.contextService.GetContextClient(contextName)
 	if err != nil {
-		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + "pd:" + podName + err.Error()}
-		log.Printf("Error getting deployment logs %s\n", result)
+		runtime.LogError(podService.ctx, err.Error())
+		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
+		log.Printf("Error getting pod list %s\n", result)
 	}
-	//defer podLogs.Close()
-	//
-	return podLogs, nil
+	podWatcher, err := client.CoreV1().Pods(namespaceName).Watch(context.Background(), metav1.ListOptions{})
+
+	// create a channel to stop the watch when needed
+	stop := make(chan struct{})
+	// handle watch events in a separate go routine
+	go func() {
+		for {
+			select {
+			case event := <-podWatcher.ResultChan():
+				pod, ok := event.Object.(*corev1.Pod)
+				if !ok {
+					// not a pod - continue
+					continue
+				}
+				// handle the pod instance as required
+				runtime.EventsEmit(podService.ctx, cacheKey, pod)
+			case <-stop:
+				runtime.EventsOff(podService.ctx, cacheKey)
+				podWatcher.Stop()
+				return
+			}
+		}
+	}()
 }

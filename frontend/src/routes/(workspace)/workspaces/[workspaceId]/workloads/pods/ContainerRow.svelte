@@ -2,9 +2,9 @@
     export let data:any;
 </script>
 
-<div class="flex w-[100px]">
+<div class="flex  w-[200px] gap-1">
     {#each data as d (d.name)}
-        <span class="text-green-700 dark:text-green-400 truncate">{d.name}</span>
+        <span class="bg-green-200 dark:bg-green-800 truncate rounded border px-1">{d.name}</span>
     {/each}
 </div>
 
