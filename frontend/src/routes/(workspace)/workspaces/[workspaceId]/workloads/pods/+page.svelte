@@ -11,6 +11,8 @@
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 	import ContainerRow from './ContainerRow.svelte'
+	import OwnerReference from './OwnerReference.svelte'
+	import PodMenu from './PodMenu.svelte'
 	import {onMount} from "svelte";
 	import {EventsOff, EventsOn} from "$lib/wailsjs/runtime";
 
@@ -19,6 +21,8 @@
 		namespace: string
 		phase: string
 		containers: any
+		owner: any
+		menu: any
 	}
 
 	let appData: AppData;
@@ -53,6 +57,18 @@
 			cell: info => renderComponent(ContainerRow, {data: info.getValue() as any}),
 			footer: info => info.column.id,
 		},
+		{
+			accessorKey: 'owner',
+			header: () => 'Owner',
+			cell: info => renderComponent(OwnerReference, {data: info.getValue() as any}),
+			footer: info => info.column.id,
+		},
+		{
+			accessorKey: 'menu',
+			header: () => '',
+			cell: info => renderComponent(PodMenu, {data: info.getValue() as any}),
+			footer: info => info.column.id,
+		},
 	]
 
 	let table:Readable<Table<Pod>>
@@ -67,7 +83,9 @@
 					name: l.metadata.name,
 					namespace: l.metadata.namespace,
 					phase: l.status.phase,
-					containers: l.spec.containers
+					containers: l.status.containerStatuses,
+					owner: l.metadata.ownerReferences,
+					menu: l.metadata.name
 				}
 				return pod
 			})
