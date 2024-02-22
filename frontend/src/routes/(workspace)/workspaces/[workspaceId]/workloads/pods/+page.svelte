@@ -31,6 +31,7 @@
 	})
 
 	let eventName = '';
+	let namespaceFilter = ''; // let it blank so that we just get all
 
 	const defaultColumns: ColumnDef<Pod>[] = [
 		{
@@ -71,12 +72,18 @@
 		},
 	]
 
+	let podList: Pod[] = [];
 	let table:Readable<Table<Pod>>
+	let options = writable<TableOptions<Pod>>({
+		data: podList,
+		columns: defaultColumns,
+		getCoreRowModel: getCoreRowModel(),
+	})
+	table = createSvelteTable(options)
 
-	let podList;
 	async function getPodList(){
 		if(appData.activeWorkspace.activeContext){
-			const response = await GetPodList(appData.activeWorkspace.name, appData.activeWorkspace.activeContext.name,"")
+			const response = await GetPodList(appData.activeWorkspace.name, appData.activeWorkspace.activeContext.name,namespaceFilter)
 			console.log(response.data)
 			podList = response.data.map((l:any) => {
 				const pod: Pod = {
@@ -90,24 +97,73 @@
 				return pod
 			})
 			console.log(podList)
+			eventName = `EmitPodList-${appData.activeWorkspace.id}-${appData.activeWorkspace.activeContext.name}-${namespaceFilter}`
+			StreamPods(`${appData.activeWorkspace.id}`, appData.activeWorkspace.activeContext.name,namespaceFilter)
 
-			const options = writable<TableOptions<Pod>>({
-				data: podList,
-				columns: defaultColumns,
-				getCoreRowModel: getCoreRowModel(),
+			options.update(opt =>{
+				opt.data = podList
+				return opt;
 			})
-
-			table = createSvelteTable(options)
 		}
 	}
 	let podListPromise = getPodList()
 
-	onMount(async ()=>{
-		// if(appData.activeWorkspace.activeContext){
-		// 	await StreamPods(appData.activeWorkspace.activeContext.name,"")
-		// 	eventName = `EmitPodList-${appData.activeWorkspace.id}-${appData.activeWorkspace.activeContext.name}-default`
-		// }
-	})
+	$: if(appData.activeWorkspace.activeContext){
+
+		console.log('EventsOn', eventName)
+		EventsOn(eventName, (emitPodEvent)=>{
+			console.log('emit log', emitPodEvent)
+			const emitPodData = emitPodEvent.Object
+			// console.log('emit log', emitPodData)
+			let pod: Pod = {
+				name: emitPodData.metadata.name,
+				namespace: emitPodData.metadata.namespace,
+				phase: emitPodData.status.phase,
+				containers: emitPodData.status.containerStatuses,
+				owner: emitPodData.metadata.ownerReferences,
+				menu: emitPodData.metadata.name
+			}
+			// console.log('emit log', pod)
+
+
+			switch (emitPodEvent.Type){
+				case 'MODIFIED': {
+					console.log('MODIFIED', pod.phase)
+					podList = podList.map(p => {
+						if(p.name === pod.name) {
+							return pod
+						}
+						return p
+					})
+					break;
+				}
+				case 'ADDED': {
+					console.log('ADDED', pod.phase)
+					if(!podList.some(obj => obj.name === pod.name)) {
+						podList.push(pod);
+					}
+					break;
+				}
+				case 'DELETED': {
+					console.log('DELETED', pod.phase)
+					podList = podList.filter(obj => obj.name !== pod.name)
+					break;
+				}
+				default: {
+
+				}
+			}
+			podList = [...podList];
+
+			options.update(opt =>{
+				// console.log('update log', podList)
+				opt.data = [...podList]
+				return opt;
+			})
+		})
+
+
+	}
 
 	function handlePodClicked(row: Row<Pod>) {
 		console.log(row.renderValue('name'))
@@ -116,12 +172,13 @@
 
 {#await podListPromise}
 	<p>...waiting</p>
-{:then data}
+{:then _}
 	<div class="flex flex-col w-full">
 		<div class="flex flex-col">
 			<div class="">
 				<div class="inline-block min-w-full">
 					<div class="inline-block min-w-full">
+
 						<table class="min-w-full text-left text-sm">
 							<thead class="border-b font-medium">
 							{#each $table.getHeaderGroups() as headerGroup}

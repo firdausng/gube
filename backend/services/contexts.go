@@ -31,7 +31,7 @@ func (service *ContextService) SetContext(ctx context.Context) {
 
 func (service *ContextService) GetContextClient(contextName string) (*kubernetes.Clientset, error) {
 	if _, ok := service.contextClient[contextName]; ok {
-		fmt.Println("Client already exists for this context")
+		fmt.Printf("Client already exists for this context %s \n", contextName)
 	} else {
 		clientConfig := clientcmd.NewNonInteractiveClientConfig(*service.Config, contextName, nil, nil)
 		restConfig, _ := clientConfig.ClientConfig()

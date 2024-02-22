@@ -20,7 +20,9 @@ type PodService struct {
 }
 
 func NewPodService() *PodService {
-	return &PodService{}
+	return &PodService{
+		eventCache: map[string]bool{},
+	}
 }
 
 func (service *PodService) SetContext(ctx context.Context, contextService *ContextService, workspaceService *WorkspaceService) {
@@ -30,9 +32,6 @@ func (service *PodService) SetContext(ctx context.Context, contextService *Conte
 }
 
 func (podService *PodService) GetPodList(workspaceId, contextName, namespaceName string) models.GenerictResult[[]corev1.Pod] {
-	if len(namespaceName) == 0 {
-		namespaceName = "default"
-	}
 	client, err := podService.contextService.GetContextClient(contextName)
 	if err != nil {
 		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
@@ -45,6 +44,7 @@ func (podService *PodService) GetPodList(workspaceId, contextName, namespaceName
 
 func (podService *PodService) StreamPods(workspaceId, contextName, namespaceName string) {
 	cacheKey := fmt.Sprintf("EmitPodList-%s-%s-%s", workspaceId, contextName, namespaceName)
+	log.Printf("EmitPodList-%s-%s-%s", workspaceId, contextName, namespaceName)
 
 	podService.cacheMutex.Lock()
 	if podService.eventCache[cacheKey] {
@@ -69,13 +69,13 @@ func (podService *PodService) StreamPods(workspaceId, contextName, namespaceName
 		for {
 			select {
 			case event := <-podWatcher.ResultChan():
-				pod, ok := event.Object.(*corev1.Pod)
+				_, ok := event.Object.(*corev1.Pod)
 				if !ok {
 					// not a pod - continue
 					continue
 				}
 				// handle the pod instance as required
-				runtime.EventsEmit(podService.ctx, cacheKey, pod)
+				runtime.EventsEmit(podService.ctx, cacheKey, event)
 			case <-stop:
 				runtime.EventsOff(podService.ctx, cacheKey)
 				podWatcher.Stop()

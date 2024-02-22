@@ -15,7 +15,7 @@
 		<Pane class="bg-app-lightest dark:bg-app-darkest">
 			<slot />
 		</Pane>
-		<Pane minSize={1}>
+		<Pane minSize={1} size={1}>
 			<div class="w-full h-full overflow-auto">
 				<BottomNav />
 			</div>

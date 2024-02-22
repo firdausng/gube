@@ -1,5 +1,4 @@
-<script>
-
+<script lang="ts">
 	let data = [
 		{id: 1, first: 'Jill', last: 'Smith', point: 50},
 		{id: 2, first: 'Eve', last: 'Jackson', point: 94},
