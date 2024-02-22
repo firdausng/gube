@@ -140,7 +140,7 @@
 				case 'ADDED': {
 					console.log('ADDED', pod.phase)
 					if(!podList.some(obj => obj.name === pod.name)) {
-						podList.push(pod);
+						podList =[pod, ...podList];
 					}
 					break;
 				}
