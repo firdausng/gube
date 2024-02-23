@@ -7,27 +7,27 @@
 	import { javascript } from '@codemirror/lang-javascript';
 	import themes from '$lib/components/editors/codemirror-themes';
 	import { appSettingStore } from '$lib/store/app-setting-store';
+	import {appDataStore, type TabItem} from "$lib/store/app-data-store";
+
+	type CodemirrorIde = {
+		resourceName: '',
+	}
 
 	const themeConfig = new Compartment()
-	let value = `I1118 09:09:50.015690       1 node.go:141] Successfully retrieved node IP: 192.168.65.3
-I1118 09:09:50.015734       1 server_others.go:110] "Detected node IP" address="192.168.65.3 server_others.go:110] "Detected node IP" address="192.168.65.3 server_others.go:110] "Detected node IP" address="192.168.65.3 "Detected node IP" address="192.168.65.3 server_others.go:110] "Detected node IP" address="192.168.65.3 "Detected node IP" address="192.168.65.3 server_others.go:110] "Detected node IP" address="192.168.65.3"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-I1118 09:09:50.015757       1 server_others.go:551] "Using iptables proxy"
-`;
+	let value = ``;
+	let tabItem: TabItem|null;
+	appDataStore.subscribe(d =>{
+		if(d.activeWorkspace.activeContext){
+			tabItem = d.activeWorkspace.activeContext.tabData.activeTab;
+
+		}
+
+	})
+
+
 	let readOnly = true
 	let activeTheme = 'Basic Light'
 	let view: EditorView;
-
 	let editorContainer;
 
 	onMount(async()=>{

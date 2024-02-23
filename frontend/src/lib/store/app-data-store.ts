@@ -9,6 +9,7 @@ export type TabItem = {
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     // component: typeof SvelteComponent<any>,
     component: string,
+    resourceName: string,
     name: string
 }
 

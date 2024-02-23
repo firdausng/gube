@@ -2,10 +2,10 @@
     export let data:any;
 </script>
 
-<div class="flex flex-col w-[200px] gap-1">
-    {#if data}
-        {#each data as d (d.uid)}
-            <div class="">
+<div class="flex w-[200px] gap-1">
+    {#if data && data.value}
+        {#each data.value as d (d.uid)}
+            <div class="px-1.5 border border-app-darkest dark:border-app-lightest">
                 <p>{d.kind}</p>
             </div>
         {/each}

@@ -58,9 +58,12 @@
 			</ul>
 		</div>
 		<div>
-			{#if activeTab}
-				<svelte:component this={activeComponent} />
-			{/if}
+			{#each tabData as tab (tab.name)}
+				{#if activeTab?.name === tab.name}
+					<svelte:component this={activeComponent} />
+				{/if}
+			{/each}
+
 
 		</div>
 	</div>

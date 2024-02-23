@@ -11,10 +11,10 @@
 
     $: if(selected){
         appDataStore.update(d =>{
-
             if(d.activeWorkspace.activeContext){
                 const tabItem: TabItem = {
                     component: selected,
+                    resourceName: data,
                     name: `${selected}: ${data}`
                 }
 

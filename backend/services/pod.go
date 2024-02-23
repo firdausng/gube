@@ -1,12 +1,15 @@
 package services
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gube/backend/models"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"sync"
 )
@@ -17,6 +20,14 @@ type PodService struct {
 	workspaceService *WorkspaceService
 	cacheMutex       sync.Mutex
 	eventCache       map[string]bool
+	podLog           map[string][]PodLog
+}
+
+type PodLog struct {
+	Context   string `json:"context"`
+	Namespace string `json:"namespace"`
+	Pod       string `json:"pod"`
+	Line      string `json:"line"`
 }
 
 func NewPodService() *PodService {
@@ -25,10 +36,10 @@ func NewPodService() *PodService {
 	}
 }
 
-func (service *PodService) SetContext(ctx context.Context, contextService *ContextService, workspaceService *WorkspaceService) {
-	service.contextService = contextService
-	service.workspaceService = workspaceService
-	service.ctx = ctx
+func (podService *PodService) SetContext(ctx context.Context, contextService *ContextService, workspaceService *WorkspaceService) {
+	podService.contextService = contextService
+	podService.workspaceService = workspaceService
+	podService.ctx = ctx
 }
 
 func (podService *PodService) GetPodList(workspaceId, contextName, namespaceName string) models.GenerictResult[[]corev1.Pod] {
@@ -83,4 +94,54 @@ func (podService *PodService) StreamPods(workspaceId, contextName, namespaceName
 			}
 		}
 	}()
+}
+
+func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceName, podName string) {
+	cacheKey := fmt.Sprintf("EmitPodLog-%s-%s-%s-%s", workspaceId, contextName, namespaceName, podName)
+	podService.cacheMutex.Lock()
+	if podService.eventCache[cacheKey] {
+		podService.cacheMutex.Unlock()
+		return
+	}
+	podService.eventCache[cacheKey] = true
+	podService.cacheMutex.Unlock()
+
+	clientConfig := clientcmd.NewNonInteractiveClientConfig(*podService.contextService.Config, contextName, &clientcmd.ConfigOverrides{}, nil)
+	restConfig, _ := clientConfig.ClientConfig()
+
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		result := models.GenerictResult[string]{ErrorMessage: "error1: " + err.Error()}
+		log.Printf("Error getting deployment logs %s\n", result)
+	}
+
+	podLogOpts := corev1.PodLogOptions{
+		Follow:     true,
+		Timestamps: true,
+	}
+	req := clientset.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
+	podLogs, err := req.Stream(context.TODO())
+	if err != nil {
+		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + "pd:" + podName + err.Error()}
+		log.Printf("Error getting deployment logs %s\n", result)
+	}
+	//defer podLogs.Close()
+	//
+	podLogList := make([]PodLog, 0)
+	scanner := bufio.NewScanner(podLogs)
+	for scanner.Scan() {
+		line := scanner.Text()
+		log.Printf("line %s\n", line)
+
+		podLog := PodLog{
+			Context:   contextName,
+			Namespace: namespaceName,
+			Pod:       podName,
+			Line:      line,
+		}
+		podService.podLog[cacheKey] = append(podLogList, podLog)
+
+		// Emit the JSON
+		runtime.EventsEmit(podService.ctx, cacheKey, podLog)
+	}
 }

@@ -10,6 +10,10 @@ export function SetContext(arg1, arg2, arg3) {
   return window['go']['services']['PodService']['SetContext'](arg1, arg2, arg3);
 }
 
+export function StreamPodLog(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['PodService']['StreamPodLog'](arg1, arg2, arg3, arg4);
+}
+
 export function StreamPods(arg1, arg2, arg3) {
   return window['go']['services']['PodService']['StreamPods'](arg1, arg2, arg3);
 }

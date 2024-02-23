@@ -1,12 +1,9 @@
 <script lang="ts">
-	import {GetContextList} from "$lib/wailsjs/go/services/ContextService"
-	import {type Readable, writable} from 'svelte/store'
-	import {
-		createSvelteTable,
-		flexRender,
-		getCoreRowModel, type Table, type Row
-	} from '@tanstack/svelte-table'
-	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table'
+	import { writable } from 'svelte/store';
+	import {createTable, Subscribe, Render, DataBodyRow} from 'svelte-headless-table';
+	import { addTableFilter } from 'svelte-headless-table/plugins';
+	import {GetContextList} from "$lib/wailsjs/go/services/ContextService";
+	import {onMount} from "svelte";
 	import { goto } from '$app/navigation';
 	import {type AppData, appDataStore, type WorkspaceContext} from '$lib/store/app-data-store';
 
@@ -20,50 +17,58 @@
 		appData = p;
 	})
 
-	const defaultColumns: ColumnDef<K8sContext>[] = [
-		{
-			accessorFn: row => row.cluster,
-			id: 'cluster',
-			cell: info => info.getValue(),
-			header: () => 'Cluster',
-			footer: info => info.column.id,
-		},
-		{
-			accessorFn: row => row.user,
-			id: 'user',
-			cell: info => info.getValue(),
-			header: () => 'User',
-			footer: info => info.column.id,
-		},
-	]
+	const data = writable<K8sContext[]>([]);
 
-	let table:Readable<Table<K8sContext>>
+	const table = createTable(data, {
+		tableFilter: addTableFilter(),
+	});
 
-	let contextListPromise = getContextList()
-	async function getContextList(){
+	const columns = table.createColumns([
+		table.column({
+			header: 'Cluster',
+			accessor: 'cluster',
+		}),
+		table.column({
+			header: 'User',
+			accessor: 'user',
+		}),
+	]);
+
+	const { visibleColumns, headerRows, rows, tableAttrs, tableBodyAttrs, pluginStates } = table.createViewModel(columns);
+	const { filterValue } = pluginStates.tableFilter;
+
+	onMount(async ()=>{
 		const list = await GetContextList()
-		let options = writable<TableOptions<K8sContext>>({
-			data: list.data,
-			columns: defaultColumns,
-			getCoreRowModel: getCoreRowModel(),
-		})
-		table = createSvelteTable(options)
-		if(list.data){
-			return list.data;
-		}
-		throw new Error(list);
-	}
+		console.log(list)
+		data.set(list.data)
+	})
 
-	async function handleContextClicked(row: Row<K8sContext>) {
+	// let contextListPromise = getContextList()
+	// async function getContextList(){
+	// 	const list = await GetContextList()
+	//
+	// 	// let options = writable<TableOptions<K8sContext>>({
+	// 	// 	data: list.data,
+	// 	// 	columns: defaultColumns,
+	// 	// 	getCoreRowModel: getCoreRowModel(),
+	// 	// })
+	// 	// table = createSvelteTable(options)
+	// 	// if(list.data){
+	// 	// 	return list.data;
+	// 	// }
+	// }
+
+	async function handleContextClicked(row: DataBodyRow<K8sContext>) {
 		/*
-		* 1. check if context already exist in active workspace context list
-		* 2. if not exist,
-		* 		- create the context
-		* 		- add the context to the list
-		* 3. update active context to the selected context
-		* 4. set the resources, navigate to the resource
-		* */
+                * 1. check if context already exist in active workspace context list
+                * 2. if not exist,
+                * 		- create the context
+                * 		- add the context to the list
+                * 3. update active context to the selected context
+                * 4. set the resources, navigate to the resource
+                * */
 
+		console.log(row)
 		let workspaceId = appData.activeWorkspace.id;
 		let resourceName= appData.activeWorkspace.activeContext?.activeResource.name ?
 				appData.activeWorkspace.activeContext?.activeResource.name:
@@ -76,6 +81,10 @@
 				active: true,
 				activeResource: {
 					name: resourceName
+				},
+				tabData: {
+					activeTab: null,
+					tabs: []
 				}
 			}
 
@@ -99,47 +108,46 @@
 	}
 </script>
 
-{#await contextListPromise}
-	<p>...waiting</p>
-{:then data}
+{#if $data.length > 0}
 	<div class="flex flex-col w-full">
 		<div class="flex flex-col">
 			<div class="">
 				<div class="inline-block min-w-full">
 					<div class="inline-block min-w-full">
-						<table class="min-w-full text-left text-sm">
+						<table class="min-w-full text-left text-sm" {...$tableAttrs}>
 							<thead class="border-b font-medium">
-							{#each $table.getHeaderGroups() as headerGroup}
-								<tr>
-									{#each headerGroup.headers as header}
-										<th class="px-2 py-2">
-											{#if !header.isPlaceholder}
-												<svelte:component
-														this={flexRender(
-															header.column.columnDef.header,
-															header.getContext()
-                  										)}
-												/>
-											{/if}
-										</th>
-									{/each}
-								</tr>
+							{#each $headerRows as headerRow (headerRow.id)}
+								<Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
+									<tr {...rowAttrs}>
+										{#each headerRow.cells as cell (cell.id)}
+											<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+												<th {...attrs}>
+													<Render of={cell.render()} />
+												</th>
+											</Subscribe>
+										{/each}
+									</tr>
+								</Subscribe>
 							{/each}
 							</thead>
-							<tbody>
-							{#each $table.getRowModel().rows as row}
-								<tr on:click={()=> handleContextClicked(row)} class="text-app-dark/80 dark:text-app-light/80
-								even:bg-app-light odd:bg-app-lightest dark:even:bg-app-dark dark:odd:bg-app-darkest
-								hover:text-app-darkest dark:hover:text-app-lightest
-								cursor-pointer">
-									{#each row.getVisibleCells() as cell}
-										<td class="whitespace-nowrap px-2 py-2 font-sm">
-											<svelte:component
-													this={flexRender(cell.column.columnDef.cell, cell.getContext())}
-											/>
-										</td>
-									{/each}
-								</tr>
+							<tbody {...$tableBodyAttrs}>
+							{#each $rows as row (row.id)}
+								<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+									<tr {...rowAttrs}
+										on:click={()=> handleContextClicked(row)}
+										class="text-app-dark/80 dark:text-app-light/80
+											even:bg-app-light odd:bg-app-lightest dark:even:bg-app-dark dark:odd:bg-app-darkest
+											hover:text-app-darkest dark:hover:text-app-lightest
+											cursor-pointer">
+										{#each row.cells as cell (cell.id)}
+											<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+												<td {...attrs} class:matches={props.tableFilter.matches} class="whitespace-nowrap px-2 py-2 font-sm">
+													<Render of={cell.render()} />
+												</td>
+											</Subscribe>
+										{/each}
+									</tr>
+								</Subscribe>
 							{/each}
 							</tbody>
 						</table>
@@ -150,6 +158,4 @@
 
 		<div class="h-4" />
 	</div>
-{:catch error}
-	<p style="color: red">{error.message}</p>
-{/await}
+{/if}
