@@ -8,8 +8,6 @@ import (
 	"gube/backend/models"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"sync"
 )
@@ -106,20 +104,18 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 	podService.eventCache[cacheKey] = true
 	podService.cacheMutex.Unlock()
 
-	clientConfig := clientcmd.NewNonInteractiveClientConfig(*podService.contextService.Config, contextName, &clientcmd.ConfigOverrides{}, nil)
-	restConfig, _ := clientConfig.ClientConfig()
-
-	clientset, err := kubernetes.NewForConfig(restConfig)
+	client, err := podService.contextService.GetContextClient(contextName)
 	if err != nil {
-		result := models.GenerictResult[string]{ErrorMessage: "error1: " + err.Error()}
-		log.Printf("Error getting deployment logs %s\n", result)
+		runtime.LogError(podService.ctx, err.Error())
+		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
+		log.Printf("Error getting context client %s\n", result)
 	}
 
 	podLogOpts := corev1.PodLogOptions{
 		Follow:     true,
 		Timestamps: true,
 	}
-	req := clientset.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
+	req := client.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(context.TODO())
 	if err != nil {
 		result := models.GenerictResult[string]{ErrorMessage: "error2: namespace:" + namespaceName + "pd:" + podName + err.Error()}
@@ -143,5 +139,21 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 
 		// Emit the JSON
 		runtime.EventsEmit(podService.ctx, cacheKey, podLog)
+	}
+}
+
+func (podService *PodService) DeletePod(workspaceId, contextName, namespaceName, podName string) {
+	client, err := podService.contextService.GetContextClient(contextName)
+	if err != nil {
+		runtime.LogError(podService.ctx, err.Error())
+		result := models.GenerictResult[[]corev1.Pod]{ErrorMessage: err.Error()}
+		log.Printf("Error getting context client %s\n", result)
+	}
+
+	podLogOpts := metav1.DeleteOptions{}
+	err = client.CoreV1().Pods(namespaceName).Delete(podService.contextService.ctx, podName, podLogOpts)
+	if err != nil {
+		runtime.LogError(podService.ctx, err.Error())
+		log.Printf("Error delete pod %s\n", err)
 	}
 }

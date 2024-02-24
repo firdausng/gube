@@ -4,6 +4,8 @@ import {models} from '../models';
 import {context} from '../models';
 import {services} from '../models';
 
+export function DeletePod(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
+
 export function GetPodList(arg1:string,arg2:string,arg3:string):Promise<models.GenerictResult[[]k8s>;
 
 export function SetContext(arg1:context.Context,arg2:services.ContextService,arg3:services.WorkspaceService):Promise<void>;

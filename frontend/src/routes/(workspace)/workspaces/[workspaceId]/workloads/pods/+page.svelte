@@ -2,13 +2,13 @@
 	import {GetPodList,
 		StreamPods
 	} from "$lib/wailsjs/go/services/PodService"
-	import {type Readable, writable} from 'svelte/store'
+	import {writable} from 'svelte/store'
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 	import ContainerRow from './ContainerRow.svelte'
 	import OwnerReference from './OwnerReference.svelte'
 	import PodMenu from './PodMenu.svelte'
-	import {onMount} from "svelte";
-	import {EventsOn} from "$lib/wailsjs/runtime";
+	import {onDestroy, onMount} from "svelte";
+	import {EventsOn, EventsOff} from "$lib/wailsjs/runtime";
 	import {createRender, createTable, DataBodyRow, Render, Subscribe} from "svelte-headless-table";
 	import {addTableFilter} from "svelte-headless-table/plugins";
 	import type {Pod} from "$lib/types";
@@ -23,7 +23,6 @@
 	let podList: Pod[] = [];
 
 	const data = writable<Pod[]>([]);
-
 	const table = createTable(data, {
 		tableFilter: addTableFilter(),
 	});
@@ -78,10 +77,9 @@
 	onMount(async ()=>{
 		await getPodList();
 		if(appData.activeWorkspace.activeContext){
-
-			console.log('EventsOn', eventName)
+			// console.log('EventsOn', eventName)
 			EventsOn(eventName, (emitPodEvent)=>{
-				console.log('emit log', emitPodEvent)
+				// console.log('emit log', emitPodEvent)
 				const emitPodData = emitPodEvent.Object
 				// console.log('emit log', emitPodData)
 				let pod: Pod = {
@@ -93,8 +91,6 @@
 					menu: emitPodData.metadata.name
 				}
 				// console.log('emit log', pod)
-
-
 				switch (emitPodEvent.Type){
 					case 'MODIFIED': {
 						console.log('MODIFIED', pod.phase)
@@ -125,13 +121,10 @@
 				podList = [...podList];
 
 				data.update(opt =>{
-					// console.log('update log', podList)
 					opt = [...podList]
 					return opt;
 				})
 			})
-
-
 		}
 	})
 
@@ -164,6 +157,10 @@
 	function handlePodClicked(row: DataBodyRow<Pod>) {
 		console.log(row)
 	}
+
+	onDestroy(()=>{
+		EventsOff(eventName)
+	})
 </script>
 
 {#if $data.length > 0}
@@ -172,7 +169,6 @@
 			<div class="">
 				<div class="inline-block min-w-full">
 					<div class="inline-block min-w-full">
-
 						<table class="min-w-full text-left text-sm" {...$tableAttrs}>
 							<thead class="border-b font-medium">
 							{#each $headerRows as headerRow (headerRow.id)}
@@ -213,8 +209,6 @@
 				</div>
 			</div>
 		</div>
-
 		<div class="h-4" />
 	</div>
 {/if}
-
