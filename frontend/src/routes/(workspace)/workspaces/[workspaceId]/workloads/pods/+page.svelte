@@ -63,7 +63,7 @@
 			accessor: 'menu',
 			cell: (data, { pluginStates }) =>{
 				return createRender(PodMenu, {
-					data: data.value
+					podName: data.value
 				});
 			},
 		}),
@@ -153,7 +153,7 @@
 	}
 
 	function handlePodClicked(row: DataBodyRow<Pod>) {
-		console.log(row)
+		// console.log(row)
 	}
 
 	onDestroy(()=>{
@@ -171,15 +171,15 @@
 							<thead class="border-b font-medium">
 							{#each $headerRows as headerRow (headerRow.id)}
 								<Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
-								<tr {...rowAttrs}>
-									{#each headerRow.cells as cell (cell.id)}
-										<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-											<th class="px-2 py-2" {...attrs}>
-												<Render of={cell.render()} />
-											</th>
-										</Subscribe>
-									{/each}
-								</tr>
+									<tr {...rowAttrs}>
+										{#each headerRow.cells as cell (cell.id)}
+											<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+												<th class="px-2 py-2" {...attrs}>
+													<Render of={cell.render()} />
+												</th>
+											</Subscribe>
+										{/each}
+									</tr>
 								</Subscribe>
 							{/each}
 							</thead>

@@ -1,18 +1,22 @@
 <script lang="ts">
     import {appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
-    import {Button, DropdownMenu} from "bits-ui";
-    import { fly } from "svelte/transition";
+    import { Button, Dropdown, DropdownItem, ToolbarButton, DropdownDivider, Modal } from 'flowbite-svelte';
+    // import { fly } from "svelte/transition";
+    // import { preloadData, pushState, goto } from '$app/navigation';
+    // import { page } from '$app/stores';
+    import type {Action} from "./PodSectionType";
 
-    export let data:string;
-    type Action = {
-        type:'tab'|'modal',
-        name:string,
-        icon: string
-    }
+    export let podName:string;
+    let deletePodModal = false;
 
     let options: Action[] = [
         {type:'tab', name:'Log', icon:"ri-align-justify"},
         {type:'tab', name:'Terminal', icon:"ri-terminal-box-line"},
+        {type:'tab', name:'edit', icon:"ri-edit-line"},
+        {type:'modal', name:'delete', icon:"ri-delete-bin-6-line"},
+    ]
+
+    let modalOptions: Action[] = [
         {type:'modal', name:'delete', icon:"ri-delete-bin-6-line"},
     ]
 
@@ -23,8 +27,8 @@
                     case 'tab':{
                         const tabItem: TabItem = {
                             component: action.name,
-                            resourceName: data,
-                            name: `${action.type}: ${action}`
+                            resourceName: podName,
+                            name: `${action.type}: ${podName}`
                         }
 
                         if( !d.activeWorkspace.activeContext.tabData){
@@ -45,7 +49,9 @@
                         break;
                     }
                     case 'modal':{
-                        console.log('delete pod')
+                        if(action.name === "delete"){
+                            deletePodModal = true;
+                        }
                         break;
                     }
                     default:
@@ -56,28 +62,26 @@
         })
     }
 </script>
-<DropdownMenu.Root>
-    <DropdownMenu.Trigger class="focus-visible inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-foreground shadow-btn active:scale-98">
-        <i class="ri-more-2-line"></i>
-    </DropdownMenu.Trigger>
 
-    <DropdownMenu.Content
-            class="w-full max-w-[120px] rounded-lg border-2 border-app-lightest dark:border-app-darkest bg-app-light dark:bg-app-dark px-1 shadow-popover cursor-pointer"
-            transition={fly}
-            sideOffset={8}
-    >
-        <DropdownMenu.Label />
-        {#each options as value (value.name)}
-            <DropdownMenu.Item
-                    class="flex select-none items-center rounded-button py-1 pl-3 pr-1.5 text-sm font-medium !ring-0 !ring-transparent data-[highlighted]:bg-muted"
-            >
-                <button class="flex items-center capitalize" on:click={()=>onActionSelected(value)}>
-                    <!--                <UserCircle class="mr-2 size-5 text-foreground-alt" />-->
-                    <i class="mr-2 size-5 text-foreground-alt {value.icon}"></i>
-                    {value.name}
-                </button>
-            </DropdownMenu.Item>
-        {/each}
-    </DropdownMenu.Content>
-</DropdownMenu.Root>
+<i class="ri-more-2-line dots-menu"></i>
+<Dropdown triggeredBy=".dots-menu">
+    {#each options as value (value.name)}
+        <DropdownItem on:click={()=>onActionSelected(value)}>
+            <i class="mr-2 font-semibold {value.icon}"></i>
+            {value.name}
+        </DropdownItem>
+    {/each}
+<!--    <DropdownItem>Dashboard</DropdownItem>-->
+<!--    <DropdownItem>Settings</DropdownItem>-->
+<!--    <DropdownItem>Earnings</DropdownItem>-->
+<!--    <DropdownItem slot="footer">Sign out</DropdownItem>-->
+</Dropdown>
+
+<Modal title="Delete Pod" bind:open={deletePodModal} autoclose>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Are you sure to delete pod {podName}</p>
+    <svelte:fragment slot="footer">
+        <Button on:click={() => alert('Handle "success"')}>OK</Button>
+        <Button color="alternative">Cancel</Button>
+    </svelte:fragment>
+</Modal>
 
