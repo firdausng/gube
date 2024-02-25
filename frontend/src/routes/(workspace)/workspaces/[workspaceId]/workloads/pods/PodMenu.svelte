@@ -1,13 +1,15 @@
 <script lang="ts">
-    import {appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
+    import {type AppData, appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
     import { Button, Dropdown, DropdownItem, ToolbarButton, DropdownDivider, Modal } from 'flowbite-svelte';
+    import {DeletePod} from "$lib/wailsjs/go/services/PodService"
     // import { fly } from "svelte/transition";
     // import { preloadData, pushState, goto } from '$app/navigation';
     // import { page } from '$app/stores';
     import type {Action} from "./PodSectionType";
 
     export let podName:string;
-    let deletePodModal = false;
+    export let namespace: string;
+    $: deletePodModal = false;
 
     let options: Action[] = [
         {type:'tab', name:'Log', icon:"ri-align-justify"},
@@ -15,6 +17,12 @@
         {type:'tab', name:'edit', icon:"ri-edit-line"},
         {type:'modal', name:'delete', icon:"ri-delete-bin-6-line"},
     ]
+
+    let appData: AppData;
+    appDataStore.subscribe(data =>{
+        appData = data;
+    })
+    $: id = `${namespace}-${podName}-modal`;
 
     let modalOptions: Action[] = [
         {type:'modal', name:'delete', icon:"ri-delete-bin-6-line"},
@@ -50,6 +58,7 @@
                     }
                     case 'modal':{
                         if(action.name === "delete"){
+                            // id = `${namespace}-${podName}-modal`
                             deletePodModal = true;
                         }
                         break;
@@ -61,9 +70,18 @@
             return d;
         })
     }
+
+    async function deletePod(namespace:string, podName:string){
+        console.log('deleting pod: ',namespace, podName )
+        if(appData.activeWorkspace.activeContext){
+            await DeletePod(appData.activeWorkspace.name, appData.activeWorkspace.activeContext?.name, namespace, podName);
+        }
+
+    }
 </script>
 
 <i class="ri-more-2-line dots-menu"></i>
+<!--<p>{podName} {namespace}</p>-->
 <Dropdown triggeredBy=".dots-menu">
     {#each options as value (value.name)}
         <DropdownItem on:click={()=>onActionSelected(value)}>
@@ -74,13 +92,17 @@
 <!--    <DropdownItem>Dashboard</DropdownItem>-->
 <!--    <DropdownItem>Settings</DropdownItem>-->
 <!--    <DropdownItem>Earnings</DropdownItem>-->
-<!--    <DropdownItem slot="footer">Sign out</DropdownItem>-->
+<!--    <DropdownItem slot="footer">-->
+<!--        <button on:click={()=>deletePod(namespace, podName)}>-->
+<!--            Delete-->
+<!--        </button>-->
+<!--    </DropdownItem>-->
 </Dropdown>
 
-<Modal title="Delete Pod" bind:open={deletePodModal} autoclose>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Are you sure to delete pod {podName}</p>
+<Modal {id} title="Delete Pod" bind:open={deletePodModal} autoclose>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Are you sure to delete pod {id}</p>
     <svelte:fragment slot="footer">
-        <Button on:click={() => alert('Handle "success"')}>OK</Button>
+        <Button on:click={()=> deletePod(podName, namespace)}>OK</Button>
         <Button color="alternative">Cancel</Button>
     </svelte:fragment>
 </Modal>

@@ -62,8 +62,10 @@
 			header: 'Menu',
 			accessor: 'menu',
 			cell: (data, { pluginStates }) =>{
+				console.log('menu', data.value)
 				return createRender(PodMenu, {
-					podName: data.value
+					podName: data.value.podName,
+					namespace: data.value.namespace
 				});
 			},
 		}),
@@ -80,15 +82,8 @@
 				// console.log('emit log', emitPodEvent)
 				const emitPodData = emitPodEvent.Object
 				// console.log('emit log', emitPodData)
-				let pod: Pod = {
-					name: emitPodData.metadata.name,
-					namespace: emitPodData.metadata.namespace,
-					phase: emitPodData.status.phase,
-					containers: emitPodData.status.containerStatuses,
-					owner: emitPodData.metadata.ownerReferences,
-					menu: emitPodData.metadata.name
-				}
-				// console.log('emit log', pod)
+				let pod: Pod= setupPod(emitPodData)
+				console.log('emit log', pod)
 				switch (emitPodEvent.Type){
 					case 'MODIFIED': {
 						console.log('MODIFIED', pod.phase)
@@ -129,18 +124,8 @@
 	async function getPodList(){
 		if(appData.activeWorkspace.activeContext){
 			const response = await GetPodList(appData.activeWorkspace.name, appData.activeWorkspace.activeContext.name,namespaceFilter)
-			console.log(response.data)
-			podList = response.data.map((l:any) => {
-				const pod: Pod = {
-					name: l.metadata.name,
-					namespace: l.metadata.namespace,
-					phase: l.status.phase,
-					containers: l.status.containerStatuses,
-					owner: l.metadata.ownerReferences,
-					menu: l.metadata.name
-				}
-				return pod
-			})
+			// console.log(response.data)
+			podList = response.data.map((l:any) => setupPod(l))
 			console.log(podList)
 			eventName = `EmitPodList-${appData.activeWorkspace.id}-${appData.activeWorkspace.activeContext.name}-${namespaceFilter}`
 			StreamPods(`${appData.activeWorkspace.id}`, appData.activeWorkspace.activeContext.name,namespaceFilter)
@@ -154,6 +139,21 @@
 
 	function handlePodClicked(row: DataBodyRow<Pod>) {
 		// console.log(row)
+	}
+
+	function setupPod(data:any){
+		let pod: Pod = {
+			name: data.metadata.name,
+			namespace: data.metadata.namespace,
+			phase: data.status.phase,
+			containers: data.status.containerStatuses,
+			owner: data.metadata.ownerReferences,
+			menu: {
+				podName: data.metadata.name,
+				namespace: data.metadata.namespace
+			}
+		}
+		return pod
 	}
 
 	onDestroy(()=>{

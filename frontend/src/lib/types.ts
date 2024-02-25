@@ -10,5 +10,8 @@ export type Pod = {
 	phase: string
 	containers: any
 	owner: any
-	menu: any
+	menu: {
+		podName:string
+		namespace: string
+	}
 }

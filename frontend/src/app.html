@@ -4,6 +4,10 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--		need to inject manually to ensure wails give no error when hot reload not on  / path-->
+		<!--		https://github.com/wailsapp/wails/issues/2262#issuecomment-1575613527-->
+		<script src="/wails/ipc.js"></script>
+		<script src="/wails/runtime.js"></script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="">
