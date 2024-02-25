@@ -89,7 +89,7 @@
 </script>
 
 {#if activeWorkspace.activeContext}
-	<div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-light dark:bg-app-dark pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
+	<div class="flex flex-col gap-1 h-full w-full max-w-48 overflow-y-auto text-sm bg-app-lightest dark:bg-app-darkest pr-2 pt-2 shadow-sm shadow-app-dark dark:shadow-app-light">
 		{#each folderSettings as folder (folder.name)}
 			<div>
 				<button class="flex gap-1" on:click={()=>toggleOpenFolder(folder.name)}>

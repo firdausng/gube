@@ -38,8 +38,8 @@
 </script>
 
 <footer class="w-full">
-	<div class="bg-app-light dark:bg-app-dark border-t-2 border-app-darkest dark:border-app-lightest">
-		<div class="border-b border-app-darkest dark:border-app-lightest flex justify-items-start items-stretch w-full">
+	<div class="bg-app-lightest dark:bg-app-darkest">
+		<div class="flex justify-items-start items-stretch w-full">
 			<ul class="-mb-px flex gap-4 text-sm font-medium bg-app-light dark:bg-app-dark">
 				{#each tabData as tab (tab.name)}
 					<li class="flex-1">

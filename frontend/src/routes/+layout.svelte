@@ -1,5 +1,6 @@
 <script lang="ts">
 	import "../app.css";
+    import 'remixicon/fonts/remixicon.css'
 	import ThemeToggle from "$lib/components/theme.svelte";
     import { appDataStore } from '$lib/store/app-data-store';
     import {GetActiveWorkspace, GetAllWorkspace} from "$lib/wailsjs/go/services/WorkspaceService";

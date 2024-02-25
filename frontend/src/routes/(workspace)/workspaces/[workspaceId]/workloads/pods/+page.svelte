@@ -1,7 +1,5 @@
 <script lang="ts">
-	import {GetPodList,
-		StreamPods
-	} from "$lib/wailsjs/go/services/PodService"
+	import {GetPodList,StreamPods} from "$lib/wailsjs/go/services/PodService"
 	import {writable} from 'svelte/store'
 	import {type AppData, appDataStore} from '$lib/store/app-data-store';
 	import ContainerRow from './ContainerRow.svelte'

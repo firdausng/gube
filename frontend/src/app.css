@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 body{
     @apply bg-app-light dark:bg-app-dark text-app-dark dark:text-app-light text-sm
 }
