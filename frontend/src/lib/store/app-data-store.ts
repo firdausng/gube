@@ -10,6 +10,7 @@ export type TabItem = {
     // component: typeof SvelteComponent<any>,
     component: string,
     resourceName: string,
+    resourceNamespace: string,
     name: string
 }
 

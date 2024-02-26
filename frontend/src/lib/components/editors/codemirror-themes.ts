@@ -1,5 +1,6 @@
 import { basicLight } from 'cm6-theme-basic-light'
 import { basicDark } from 'cm6-theme-basic-dark'
+import type {Extension} from "@codemirror/state";
 
 // const themes = [
 //     {
@@ -11,7 +12,7 @@ import { basicDark } from 'cm6-theme-basic-dark'
 //         name: 'Basic Dark'
 //     }
 // ]
-const themes = {
+const themes: Record<string, Extension> = {
     'Basic Light': basicLight,
     'Basic Dark': basicDark
 }

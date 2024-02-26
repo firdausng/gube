@@ -62,7 +62,7 @@
 			header: 'Menu',
 			accessor: 'menu',
 			cell: (data, { pluginStates }) =>{
-				console.log('menu', data.value)
+				// console.log('menu', data.value)
 				return createRender(PodMenu, {
 					podName: data.value.podName,
 					namespace: data.value.namespace
@@ -83,7 +83,7 @@
 				const emitPodData = emitPodEvent.Object
 				// console.log('emit log', emitPodData)
 				let pod: Pod= setupPod(emitPodData)
-				console.log('emit log', pod)
+				// console.log('emit log', pod)
 				switch (emitPodEvent.Type){
 					case 'MODIFIED': {
 						console.log('MODIFIED', pod.phase)
@@ -126,7 +126,7 @@
 			const response = await GetPodList(appData.activeWorkspace.name, appData.activeWorkspace.activeContext.name,namespaceFilter)
 			// console.log(response.data)
 			podList = response.data.map((l:any) => setupPod(l))
-			console.log(podList)
+			// console.log(podList)
 			eventName = `EmitPodList-${appData.activeWorkspace.id}-${appData.activeWorkspace.activeContext.name}-${namespaceFilter}`
 			StreamPods(`${appData.activeWorkspace.id}`, appData.activeWorkspace.activeContext.name,namespaceFilter)
 

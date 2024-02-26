@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CodemirrorEditor from "$lib/components/editors/codemirror-editor.svelte";
 	import XtermTerminal from "$lib/components/terminal/xterm-terminal.svelte";
+	import PodLogEditor from "$lib/components/editors/pod-log.svelte";
 	import type { SvelteComponent } from 'svelte';
 	import {appDataStore, type TabItem} from "$lib/store/app-data-store";
 
@@ -29,7 +30,7 @@
 	function changeTab(tab: TabItem) {
 		activeTab = tab
 		if(activeTab.component.toLowerCase() === "log"){
-			activeComponent = CodemirrorEditor;
+			activeComponent = PodLogEditor;
 		}
 		if(activeTab.component.toLowerCase() === "terminal"){
 			activeComponent = XtermTerminal;
@@ -50,9 +51,7 @@
 						'text-app-darkest dark:text-app-lightest after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-app-light dark:after:bg-app-dark':
 						'text-app-darkest/50 dark:text-app-lightest/50'
 						}"
-						>
-							{tab.name}</button
-						>
+						>{tab.name}</button>
 					</li>
 				{/each}
 			</ul>
@@ -63,9 +62,6 @@
 					<svelte:component this={activeComponent} />
 				{/if}
 			{/each}
-
-
 		</div>
 	</div>
 </footer>
-

@@ -31,6 +31,7 @@ type PodLog struct {
 func NewPodService() *PodService {
 	return &PodService{
 		eventCache: map[string]bool{},
+		podLog:     map[string][]PodLog{},
 	}
 }
 
@@ -99,6 +100,8 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 	podService.cacheMutex.Lock()
 	if podService.eventCache[cacheKey] {
 		podService.cacheMutex.Unlock()
+		result := models.GenerictResult[string]{ErrorMessage: "key already exist: " + cacheKey}
+		runtime.EventsEmit(podService.ctx, cacheKey, result)
 		return
 	}
 	podService.eventCache[cacheKey] = true

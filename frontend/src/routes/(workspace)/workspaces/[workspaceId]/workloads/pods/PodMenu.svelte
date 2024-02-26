@@ -29,7 +29,8 @@
                         const tabItem: TabItem = {
                             component: action.name,
                             resourceName: podName,
-                            name: `${action.type}: ${podName}`
+                            resourceNamespace: namespace,
+                            name: `${action.name}: ${podName}`
                         }
 
                         if( !d.activeWorkspace.activeContext.tabData){
