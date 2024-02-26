@@ -1,10 +1,7 @@
 <script lang="ts">
     import {type AppData, appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
     import { Button, Dropdown, DropdownItem, ToolbarButton, DropdownDivider, Modal } from 'flowbite-svelte';
-    import {DeletePod} from "$lib/wailsjs/go/services/PodService"
-    // import { fly } from "svelte/transition";
-    // import { preloadData, pushState, goto } from '$app/navigation';
-    // import { page } from '$app/stores';
+    import { DeletePod } from "$lib/wailsjs/go/services/PodService"
     import type {Action} from "./PodSectionType";
 
     export let podName:string;
@@ -23,10 +20,6 @@
         appData = data;
     })
     $: id = `${namespace}-${podName}-modal`;
-
-    let modalOptions: Action[] = [
-        {type:'modal', name:'delete', icon:"ri-delete-bin-6-line"},
-    ]
 
     function onActionSelected(action: Action){
         appDataStore.update(d =>{
@@ -58,7 +51,6 @@
                     }
                     case 'modal':{
                         if(action.name === "delete"){
-                            // id = `${namespace}-${podName}-modal`
                             deletePodModal = true;
                         }
                         break;
@@ -72,38 +64,26 @@
     }
 
     async function deletePod(namespace:string, podName:string){
-        console.log('deleting pod: ',namespace, podName )
         if(appData.activeWorkspace.activeContext){
             await DeletePod(appData.activeWorkspace.name, appData.activeWorkspace.activeContext?.name, namespace, podName);
         }
-
     }
 </script>
 
-<i class="ri-more-2-line dots-menu"></i>
-<!--<p>{podName} {namespace}</p>-->
-<Dropdown triggeredBy=".dots-menu">
+<i class="ri-more-2-line dots-menu {id}"></i>
+<Dropdown triggeredBy=".{id}">
     {#each options as value (value.name)}
         <DropdownItem on:click={()=>onActionSelected(value)}>
             <i class="mr-2 font-semibold {value.icon}"></i>
             {value.name}
         </DropdownItem>
     {/each}
-<!--    <DropdownItem>Dashboard</DropdownItem>-->
-<!--    <DropdownItem>Settings</DropdownItem>-->
-<!--    <DropdownItem>Earnings</DropdownItem>-->
-<!--    <DropdownItem slot="footer">-->
-<!--        <button on:click={()=>deletePod(namespace, podName)}>-->
-<!--            Delete-->
-<!--        </button>-->
-<!--    </DropdownItem>-->
 </Dropdown>
 
 <Modal {id} title="Delete Pod" bind:open={deletePodModal} autoclose>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Are you sure to delete pod {id}</p>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Are you sure to delete pod {podName}</p>
     <svelte:fragment slot="footer">
-        <Button on:click={()=> deletePod(podName, namespace)}>OK</Button>
+        <Button on:click={()=> deletePod(namespace, podName)}>OK</Button>
         <Button color="alternative">Cancel</Button>
     </svelte:fragment>
 </Modal>
-
