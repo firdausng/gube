@@ -23,13 +23,6 @@ body{
     @apply bg-app-lightest dark:bg-app-darkest
 }
 
-.splitpanes__pane{
-    @apply bg-app-lightest dark:bg-app-darkest overflow-auto !important
-}
-.splitpanes__splitter {
-    @apply bg-app-light dark:bg-app-dark !important
-}
-
 .xterm, .splitpanes__pane > [role="tabpanel"] > div {
     height: 100%;
     width: 100%;

@@ -95,13 +95,15 @@ func (podService *PodService) StreamPods(workspaceId, contextName, namespaceName
 	}()
 }
 
-func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceName, podName string) {
-	cacheKey := fmt.Sprintf("EmitPodLog-%s-%s-%s-%s", workspaceId, contextName, namespaceName, podName)
+func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceName, podName, containerName string) {
+	cacheKey := fmt.Sprintf("EmitPodLog-%s-%s-%s-%s-%s", workspaceId, contextName, namespaceName, podName, containerName)
+	if len(containerName) > 0 {
+		cacheKey = cacheKey + fmt.Sprintf("-%s", containerName)
+	}
 	podService.cacheMutex.Lock()
 	if podService.eventCache[cacheKey] {
 		podService.cacheMutex.Unlock()
-		result := models.GenerictResult[string]{ErrorMessage: "key already exist: " + cacheKey}
-		runtime.EventsEmit(podService.ctx, cacheKey, result)
+		runtime.LogError(podService.ctx, "key already exist: "+cacheKey)
 		return
 	}
 	podService.eventCache[cacheKey] = true
@@ -118,6 +120,11 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 		Follow:     true,
 		Timestamps: true,
 	}
+
+	if len(containerName) > 0 {
+		podLogOpts.Container = containerName
+	}
+
 	req := client.CoreV1().Pods(namespaceName).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(context.TODO())
 	if err != nil {
@@ -130,7 +137,7 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 	scanner := bufio.NewScanner(podLogs)
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Printf("line %s\n", line)
+		//log.Printf("line %s\n", line)
 
 		podLog := PodLog{
 			Context:   contextName,
@@ -139,7 +146,7 @@ func (podService *PodService) StreamPodLog(workspaceId, contextName, namespaceNa
 			Line:      line,
 		}
 		podService.podLog[cacheKey] = append(podLogList, podLog)
-
+		log.Printf("line %s\n", podLog.Line)
 		// Emit the JSON
 		runtime.EventsEmit(podService.ctx, cacheKey, podLog)
 	}

@@ -3,25 +3,26 @@
 	import XtermTerminal from "$lib/components/terminal/xterm-terminal.svelte";
 	import PodLogEditor from "$lib/components/editors/pod-log.svelte";
 	import type { SvelteComponent } from 'svelte';
-	import {appDataStore, type TabItem} from "$lib/store/app-data-store";
+	import {appDataStore} from "$lib/store/app-data-store";
+	import {bottomTabDataStore, type TabItem} from "$lib/store/app-tab-data";
+
+
+	let tabId:string
+	appDataStore.subscribe(d =>{
+		tabId = `${d.activeWorkspace.name}-${d.activeWorkspace.activeContext?.name}`
+	})
 
 	let activeTab: TabItem|null|undefined;
-
 	let tabData: TabItem[] = []
-		// 	[
-		// {name: "logs", component: "CodemirrorEditor"},
-		// {name: "terminal", component: "XtermTerminal"},
-		// ]
 
-	appDataStore.subscribe(d => {
-		if(d.activeWorkspace.activeContext?.tabData){
-			activeTab = d.activeWorkspace.activeContext?.tabData.activeTab
-			tabData = d.activeWorkspace.activeContext?.tabData.tabs
+	bottomTabDataStore.subscribe(d => {
+		if(d[tabId]){
+			activeTab = d[tabId].activeTab
+			tabData = d[tabId].tabs
 
 			if(activeTab){
 				changeTab(activeTab!)
 			}
-
 		}
 	})
 

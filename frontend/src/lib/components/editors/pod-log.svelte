@@ -1,38 +1,82 @@
 <script lang="ts">
     import { codeMirrorEditor } from './editor';
-    import { onMount } from 'svelte';
-    import {type AppData, appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
+    import {onDestroy, onMount} from 'svelte';
+    import {type AppData, appDataStore} from "$lib/store/app-data-store";
     import { StreamPodLog } from "$lib/wailsjs/go/services/PodService"
     import {EventsOn} from "$lib/wailsjs/runtime";
+    import {appEditorDataStore} from "$lib/store/app-editor-data";
+    import {bottomTabDataStore} from "$lib/store/app-tab-data";
 
+
+    let tabId:string
+    let workspaceName = '';
+    let contextName = '';
     let appData: AppData;
-    appDataStore.subscribe(data =>{
-        appData = data;
+    appDataStore.subscribe(d =>{
+        if(appData.activeWorkspace.activeContext){
+            appData = data;
+            workspaceName = appData.activeWorkspace.name;
+            contextName = appData.activeWorkspace.activeContext!.name;
+            tabId = `${d.activeWorkspace.name}-${d.activeWorkspace.activeContext?.name}`
+        }
+
+    })
+
+    let namespaceName = '';
+    let podName = '';
+    let id = ``;
+    const appDataStoreSubscriber = bottomTabDataStore.subscribe(d =>{
+        if(d[tabId] && d[tabId].activeTab){
+            namespaceName = d[tabId].activeTab!.resourceNamespace;
+            podName = d[tabId].activeTab!.resourceName;
+            id = `${tabId}-${namespaceName}-${podName}`;
+        }
     })
 
     let data = {
         value: ''
     }
 
-    onMount(async()=>{
-        if(appData.activeWorkspace.activeContext && appData.activeWorkspace.activeContext?.tabData.activeTab){
+    appEditorDataStore.subscribe(d =>{
+        if(d[id]){
+            for (let i = 0; i < d[id].line.length; i++) {
+                data.value += d[id].line[i] + "\n"
+            }
+        }
+    })
 
-            let workspaceId = appData.activeWorkspace.name;
-            let contextName = appData.activeWorkspace.activeContext.name;
-            let namespaceName = appData.activeWorkspace.activeContext.tabData.activeTab.resourceNamespace;
-            let podName = appData.activeWorkspace.activeContext.tabData.activeTab.resourceName;
-            StreamPodLog(workspaceId, contextName, namespaceName, podName);
-            let eventName = `EmitPodLog-${workspaceId}-${contextName}-${namespaceName}-${podName}`;
+
+    onMount(async()=>{
+        if(id.length > 0){
+            StreamPodLog(workspaceName, contextName, namespaceName, podName, "");
+            let eventName = `EmitPodLog-${id}`;
             console.log('get log', eventName)
 
             EventsOn(eventName, (emitPodLog)=>{
-                console.log(emitPodLog)
-                data = {...data, value: emitPodLog.line + "\n"}
-                console.log(data.value)
-                // data = data;
+                appEditorDataStore.update(d =>{
+                    if(!d[id]){
+                        d[id] = {
+                            workspaceName,
+                            contextName,
+                            namespaceName,
+                            resourceName: podName,
+                            settings: {},
+                            line:[emitPodLog.line]
+                        }
+                    }else {
+                        d[id].line.push(emitPodLog.line)
+                    }
+
+                    console.log(d[id].line + "\n")
+                    return d;
+                })
             })
         }
 
+    })
+
+    onDestroy(()=>{
+        appDataStoreSubscriber()
     })
 </script>
 

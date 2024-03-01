@@ -56,34 +56,6 @@ export function codeMirrorEditor(editorContainer:HTMLElement, {value}: {value:st
         }
     });
 
-    // function focusable() {
-    //     return Array.from(editorContainer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'));
-    // }
-    //
-    // function handleKeydown(event) {
-    //     if (event.key !== 'Tab') return;
-    //
-    //     const current = document.activeElement;
-    //
-    //     const elements = focusable();
-    //     const first = elements.at(0);
-    //     const last = elements.at(-1)
-    //
-    //     if (event.shiftKey && current === first) {
-    //         last.focus();
-    //         event.preventDefault();
-    //     }
-    //
-    //     if (!event.shiftKey && current === last) {
-    //         first.focus();
-    //         event.preventDefault();
-    //     }
-    // }
-    //
-    // focusable()[0]?.focus();
-    //
-    // editorContainer.addEventListener('keydown', handleKeydown);
-
     return {
         destroy() {
             // editorContainer.removeEventListener('keydown', handleKeydown);
@@ -91,8 +63,7 @@ export function codeMirrorEditor(editorContainer:HTMLElement, {value}: {value:st
         },
         update(data:{value:string}){
             const docLength = view.state.doc.length;
-
-
+            // console.log('codeMirrorEditor: ', data)
             const scrollToBtm = {
                 selection: {
                     anchor: docLength + 1,
@@ -105,7 +76,8 @@ export function codeMirrorEditor(editorContainer:HTMLElement, {value}: {value:st
                 changes: {
                     from: docLength,
                     to: docLength,
-                    insert: data.value
+                    // insert: data.value,
+                    data: data.value
                 }
             };
 

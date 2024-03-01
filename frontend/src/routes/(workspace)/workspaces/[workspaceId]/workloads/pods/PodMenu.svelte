@@ -1,12 +1,14 @@
 <script lang="ts">
-    import {type AppData, appDataStore, type Tab, type TabItem} from "$lib/store/app-data-store";
+    import {type AppData, appDataStore} from "$lib/store/app-data-store";
     import { Button, Dropdown, DropdownItem, ToolbarButton, DropdownDivider, Modal } from 'flowbite-svelte';
     import { DeletePod } from "$lib/wailsjs/go/services/PodService"
     import type {Action} from "./PodSectionType";
+    import {type TabItem, bottomTabDataStore} from "$lib/store/app-tab-data";
 
     export let podName:string;
     export let namespace: string;
     $: deletePodModal = false;
+    let dropdownOpen = false;
 
     let options: Action[] = [
         {type:'tab', name:'Log', icon:"ri-align-justify"},
@@ -62,6 +64,7 @@
             }
             return d;
         })
+        dropdownOpen = false;
     }
 
     async function deletePod(namespace:string, podName:string){
@@ -72,7 +75,7 @@
 </script>
 
 <i class="ri-more-2-line dots-menu {id}"></i>
-<Dropdown triggeredBy=".{id}">
+<Dropdown triggeredBy=".{id}" bind:open={dropdownOpen}>
     {#each options as value (value.name)}
         <DropdownItem on:click={()=>onActionSelected(value)}>
             <i class="mr-2 font-semibold {value.icon}"></i>

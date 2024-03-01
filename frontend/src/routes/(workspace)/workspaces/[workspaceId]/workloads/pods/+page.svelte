@@ -162,13 +162,13 @@
 </script>
 
 {#if $data.length > 0}
-	<div class="flex flex-col w-full">
+	<div class="flex flex-col w-full h-full overflow-auto">
 		<div class="flex flex-col">
 			<div class="">
 				<div class="inline-block min-w-full">
 					<div class="inline-block min-w-full">
-						<table class="min-w-full text-left text-sm" {...$tableAttrs}>
-							<thead class="border-b font-medium">
+						<table class=" min-w-full text-left text-sm" {...$tableAttrs}>
+							<thead class="sticky top-0  border-b font-medium w-full bg-app-lightest dark:bg-app-darkest shadow-md shadow-app-light dark:shadow-app-dark">
 							{#each $headerRows as headerRow (headerRow.id)}
 								<Subscribe rowAttrs={headerRow.attrs()} let:rowAttrs>
 									<tr {...rowAttrs}>

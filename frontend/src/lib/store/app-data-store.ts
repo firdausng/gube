@@ -5,26 +5,13 @@ export type Resource = {
     name: string
 }
 
-export type TabItem = {
-    /* eslint-disable  @typescript-eslint/no-explicit-any */
-    // component: typeof SvelteComponent<any>,
-    component: string,
-    resourceName: string,
-    resourceNamespace: string,
-    name: string
-}
 
-export type Tab = {
-    activeTab:TabItem| null
-    tabs: TabItem[]
-}
 
 export type WorkspaceContext = {
     name: string
     id: string
     active: boolean
     activeResource: Resource
-    tabData: Tab
 }
 
 export type Workspace = {
